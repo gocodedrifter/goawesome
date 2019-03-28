@@ -34,7 +34,7 @@ var once sync.Once
 // GetConfig : get configuration
 func GetConfig() *Config {
 	once.Do(func() {
-		configor.Load(&configuration, "config.yml")
+		configor.Load(&configuration, "config.dev.yml")
 	})
 	return configuration
 }

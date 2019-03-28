@@ -4,7 +4,7 @@ gsp:
 
 iso:
     server:
-        listener: 
+        listener:
             ip:     119.82.224.226
             port:   8085
         dial:

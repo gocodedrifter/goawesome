@@ -15,12 +15,15 @@ func main() {
 	go StartDialManager()
 
 	go func() {
+		log.Println("[MessageExchange] : start the function")
 		defer wg.Done()
 		for {
 			select {
 			case message := <-MessageClientIn:
+				log.Println("[MessageExchange] : received message from client ")
 				ServerDialOut <- message
 			case message := <-ServerDialIn:
+				log.Println("[MessageExchange] : received message from server ")
 				MessageClientOut <- message
 			}
 		}
