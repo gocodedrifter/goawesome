@@ -9,4 +9,6 @@ var (
 	ServerDialOut = make(chan []byte)
 	// ServerDialIn : response message after dial to the iso server
 	ServerDialIn = make(chan []byte)
+	// JSONMessage : json message
+	JSONMessage = make(chan []byte)
 )
