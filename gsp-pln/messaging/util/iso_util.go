@@ -1,27 +1,47 @@
 package util
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 )
 
-// GetIso8583CurrentTime : get iso current time
-func GetIso8583CurrentTime() string {
+// GetIsoCurrentTime : get iso current time
+func GetIsoCurrentTime() string {
 	t := time.Now()
 	return fmt.Sprintf("%d%02d%02d%02d%02d%02d", t.Year(), int(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
-// GetIso8583BankCodeFormat : Standard iso 8583 for bank code
-func GetIso8583BankCodeFormat(bankCode string) string {
+// GetIsoBankCodeFormat : Standard iso 8583 for bank code
+func GetIsoBankCodeFormat(bankCode string) string {
 	return fmt.Sprintf("%07s", bankCode)
 }
 
-// GetIso8583StanFormat : Standard System trace audit number for iso8583
-func GetIso8583StanFormat(stan string) string {
+// GetIsoStanFormat : Standard System trace audit number for iso8583
+func GetIsoStanFormat(stan string) string {
 	return fmt.Sprintf("%012s", stan)
 }
 
-// GetIso8583TerminalIDFormat : Standard terminal id format for iso8583
-func GetIso8583TerminalIDFormat(terminalID string) string {
+// GetIsoTerminalIDFormat : Standard terminal id format for iso8583
+func GetIsoTerminalIDFormat(terminalID string) string {
 	return fmt.Sprintf("%016s", terminalID)
+}
+
+// EncapsulateBytes : to encapsulate length of isobytes with length
+func EncapsulateBytes(packetIso []byte) []byte {
+
+	packetIsoLength := Bcd([]byte(fmt.Sprintf("%04x", len(string(packetIso))+2)))
+	encapsulatedWithLength := append(packetIsoLength, packetIso...)
+
+	return encapsulatedWithLength
+}
+
+// Bcd : Byte -> Binary Coded Decymal
+func Bcd(data []byte) []byte {
+	out := make([]byte, len(data)/2+1)
+	n, err := hex.Decode(out, data)
+	if err != nil {
+		panic(err.Error())
+	}
+	return out[:n]
 }

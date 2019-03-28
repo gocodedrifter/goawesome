@@ -8,7 +8,8 @@ import (
 var wg = sync.WaitGroup{}
 
 func main() {
-	log.Println("starting ...")
+
+	log.Println("starting biller payment ...")
 
 	wg.Add(3)
 	go StartListenerServer()

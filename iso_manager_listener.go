@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 )
 
 // IsoManagerListener : iso manager listener
@@ -75,11 +77,11 @@ func (manager *IsoManagerListener) Send(client *Client) {
 func StartListenerServer() {
 	log.Println("[startListenerServer()] : starting server ...")
 	listener, error := net.Listen("tcp", fmt.Sprintf("%s:%s",
-		GetConfig().Iso.Server.Listener.IP, GetConfig().Iso.Server.Listener.Port))
+		config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port))
 
 	if error != nil {
 		log.Printf("[startListenerServer()]: unable to listen for the ip and port : %s:%s, error : %s",
-			GetConfig().Iso.Server.Listener.IP, GetConfig().Iso.Server.Listener.Port, error.Error())
+			config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port, error.Error())
 	}
 	manager := IsoManagerListener{
 		clients:    make(map[*Client]string),

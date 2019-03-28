@@ -4,9 +4,9 @@ import "fmt"
 
 // TransactionAmount : transaction amount
 type TransactionAmount struct {
-	IsoCurrencyCode   string
-	CurrencyMinorUnit string
-	ValueAmount       string
+	IsoCurrencyCode   string `json:"isoCurrencyCode,omitempty"`
+	CurrencyMinorUnit string `json:"currencyMinorUnit,omitempty"`
+	ValueAmount       string `json:"valueAmount,omitempty"`
 }
 
 // BuildTrxAmt : build transaction amount for iso 8583
@@ -21,5 +21,11 @@ func ParseMessageToTrxAmt(message string) (transactionAmount TransactionAmount) 
 	transactionAmount.CurrencyMinorUnit = message[3:4]
 	transactionAmount.ValueAmount = message[4:]
 
+	return
+}
+
+// FormatTrxAmountString : format transaction amount
+func FormatTrxAmountString(trx TransactionAmount) (message string) {
+	message = fmt.Sprintf("%03s%01s%012s", trx.IsoCurrencyCode, trx.CurrencyMinorUnit, trx.ValueAmount)
 	return
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 )
 
 // IsoManagerDial : iso manager dial
@@ -20,7 +22,7 @@ func (manager *IsoManagerDial) Receive() {
 		length, err := manager.socket.Read(message)
 		if err != nil {
 			log.Println("[Receive()] : the connection to dial is closed : ",
-				GetConfig().Iso.Server.Dial.IP, GetConfig().Iso.Server.Dial.Port)
+				config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 
 			log.Println("[Receive()] : try to redial ")
 			manager.socket = handleDialConnection()
@@ -50,18 +52,18 @@ func (manager *IsoManagerDial) GetListenerMessage() {
 
 func handleDialConnection() net.Conn {
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s",
-		GetConfig().Iso.Server.Dial.IP, GetConfig().Iso.Server.Dial.Port))
+		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port))
 
 	if err != nil {
 		log.Println("IsoManagerDial[handleDialConnection()] : unable to dial to the server : ",
-			GetConfig().Iso.Server.Dial.IP, GetConfig().Iso.Server.Dial.Port)
+			config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 		panic(err.Error())
 	}
 
 	err = connection.(*net.TCPConn).SetKeepAlive(true)
 	if err != nil {
 		log.Println("IsoManagerDial[handleDialConnection()] : unable to keep the server dial always live : ",
-			GetConfig().Iso.Server.Dial.IP, GetConfig().Iso.Server.Dial.Port)
+			config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 		panic(err.Error())
 	}
 

@@ -5,8 +5,9 @@ import (
 	"log"
 
 	"github.com/Ayvan/iso8583"
-	"gitlab.com/2pay/biller-payment/utils"
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/basic"
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/util"
 )
 
 // Netman : network management
@@ -23,12 +24,13 @@ type Netman struct {
 // Encode : encode from network management to iso8583
 func (netman *Netman) Encode(message string) []byte {
 
+	log.Println("netman[Encode(message string)] : start to encode")
 	netmanMsg := Netman{}
 	if err := json.Unmarshal([]byte(message), &netmanMsg); err != nil {
 		log.Println("netman[Encode(message string)] : unable to marshal")
 	}
 
-	msg := iso8583.NewMessageExtended(utils.MtiNetmanRequest, iso8583.ASCII, false, true,
+	msg := iso8583.NewMessageExtended(config.Get().Mti.Netman.Request, iso8583.ASCII, false, true,
 		&basic.Iso8583Format{
 			DateTimeLocalTransaction: iso8583.NewAlphanumeric(netmanMsg.TransactionTime),
 			PartnerCentralID:         iso8583.NewLlvar([]byte(netmanMsg.PartnerCentralID)),
@@ -42,30 +44,19 @@ func (netman *Netman) Encode(message string) []byte {
 		panic(err.Error())
 	}
 
-	return utils.EncapsulateBytes(packetIso)
+	log.Println("netman[Encode(message string)] : end to encode")
+	return util.EncapsulateBytes(packetIso)
 
 }
 
 // Decode : decode from byte iso8583 to networkmanagement
 func (netman *Netman) Decode(message []byte) (string, error) {
 
-	iso := iso8583.NewMessageExtended("", iso8583.ASCII, false, true,
-		&basic.Iso8583Format{
-			DateTimeLocalTransaction: iso8583.NewAlphanumeric(""),
-			PartnerCentralID:         iso8583.NewLlvar([]byte("")),
-			ActionCode:               iso8583.NewAlphanumeric(""),
-			ResponseCode:             iso8583.NewAlphanumeric(""),
-			TerminalID:               iso8583.NewAlphanumeric(""),
-			AdditionalPrivateData:    iso8583.NewLllvar([]byte("")),
-		})
-
-	if err := iso.Load(message[2:]); err != nil {
-		panic(err.Error())
-	}
-
-	resultFields := iso.Data.(*basic.Iso8583Format)
+	log.Println("netman[Decode(message string)] : start to decode")
+	resultFields := basic.DecodeIsoMessage(message)
 
 	netmanResult := &Netman{
+		Payload:               string(message),
 		TransactionTime:       resultFields.DateTimeLocalTransaction.Value,
 		PartnerCentralID:      string(resultFields.PartnerCentralID.Value),
 		ActionCode:            resultFields.ActionCode.Value,
@@ -76,5 +67,6 @@ func (netman *Netman) Decode(message []byte) (string, error) {
 
 	json, _ := json.Marshal(netmanResult)
 
+	log.Println("netman[Decode(message string)] : end to decode")
 	return string(json), nil
 }

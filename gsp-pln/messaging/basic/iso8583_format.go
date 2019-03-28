@@ -18,15 +18,16 @@ type Iso8583Format struct {
 	ActionCode               *iso8583.Alphanumeric `field:"40" length:"3" encode:"ascii"`
 	TerminalID               *iso8583.Alphanumeric `field:"41" length:"16" encode:"ascii"`
 	AdditionalPrivateData    *iso8583.Lllvar       `field:"48" length:"999" encode:"ascii"`
+	OriginalData             *iso8583.Lllvar       `field:"56" length:"999" encode:"ascii"`
 	AdditionalPrivateData2   *iso8583.Lllvar       `field:"61" length:"999" encode:"ascii"`
 	AdditionalPrivateData3   *iso8583.Lllvar       `field:"62" length:"999" encode:"ascii"`
 	InfoText                 *iso8583.Lllvar       `field:"63" length:"999" encode:"ascii"`
 }
 
 // DecodeIsoMessage : decode iso bit message to iso8583 format
-func DecodeIsoMessage(mti string, message []byte) *Iso8583Format {
+func DecodeIsoMessage(message []byte) *Iso8583Format {
 
-	iso := iso8583.NewMessageExtended(mti, iso8583.ASCII, false, true,
+	iso := iso8583.NewMessageExtended("", iso8583.ASCII, false, true,
 		&Iso8583Format{
 			PrimaryAccountNumber:     iso8583.NewLlvar([]byte("")),
 			TransactionAmount:        iso8583.NewAlphanumeric(""),
@@ -40,6 +41,7 @@ func DecodeIsoMessage(mti string, message []byte) *Iso8583Format {
 			ActionCode:               iso8583.NewAlphanumeric(""),
 			TerminalID:               iso8583.NewAlphanumeric(""),
 			AdditionalPrivateData:    iso8583.NewLllvar([]byte("")),
+			OriginalData:             iso8583.NewLllvar([]byte("")),
 			AdditionalPrivateData2:   iso8583.NewLllvar([]byte("")),
 			AdditionalPrivateData3:   iso8583.NewLllvar([]byte("")),
 			InfoText:                 iso8583.NewLllvar([]byte("")),
