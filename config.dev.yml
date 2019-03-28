@@ -1,0 +1,25 @@
+gsp:
+    terminalId:         SOMATECH002
+    partnerCentralId:   0090029
+
+iso:
+    server:
+        listener: 
+            ip:     119.82.224.226
+            port:   8085
+        dial:
+            ip:     103.30.85.35
+            port:   40060
+
+            
+# appname: test
+    
+# db:
+#     name:     aripaja
+#     user:     adaapa
+#     password: kamukemanaaja
+#     port:     1234
+
+# contacts:
+# - name: i test
+#   email: test@test.com
