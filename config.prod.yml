@@ -1,6 +1,6 @@
 gsp:
-    terminalId: SOMATECH002
-    partnerCentralId: 0090029
+    terminalId:         SOMATECH002
+    partnerCentralId:   0090029
 
 iso:
     server:
