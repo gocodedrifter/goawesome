@@ -52,7 +52,7 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to decode")
 	resultFields := basic.DecodeIsoMessage(message)
 
-	msgInqResult := &Message{
+	msgPayResult := &Message{
 		PrimaryAccountNumber:     string(resultFields.PrimaryAccountNumber.Value),
 		TransactionAmount:        basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value),
 		Stan:                     resultFields.Stan.Value,
@@ -64,11 +64,14 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 		ResponseCode:             resultFields.ResponseCode.Value,
 		TerminalID:               resultFields.TerminalID.Value,
 		AdditionalPrivateData:    BuildResponse(string(resultFields.AdditionalPrivateData.Value)),
-		AdditionalPrivateData2:   BuildData2Response(string(resultFields.AdditionalPrivateData2.Value)),
 		AdditionalPrivateData3:   BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value)),
 	}
 
-	json, _ := json.Marshal(msgInqResult)
+	if resultFields.ResponseCode.Value == "0000" {
+		msgPayResult.AdditionalPrivateData2 = BuildData2Response(string(resultFields.AdditionalPrivateData2.Value))
+	}
+
+	json, _ := json.Marshal(msgPayResult)
 
 	return string(json), nil
 }

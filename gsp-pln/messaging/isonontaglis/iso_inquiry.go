@@ -60,8 +60,13 @@ func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
 		PartnerCentralID:         string(resultFields.PartnerCentralID.Value),
 		ResponseCode:             resultFields.ResponseCode.Value,
 		TerminalID:               resultFields.TerminalID.Value,
-		AdditionalPrivateData:    BuildResponse(string(resultFields.AdditionalPrivateData.Value)),
-		AdditionalPrivateData3:   BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value)),
+	}
+
+	if resultFields.ResponseCode.Value != "0000" {
+		msgInqResult.AdditionalPrivateData = BuildResponseUnexpected(string(resultFields.AdditionalPrivateData.Value))
+	} else {
+		msgInqResult.AdditionalPrivateData = BuildResponse(string(resultFields.AdditionalPrivateData.Value))
+		msgInqResult.AdditionalPrivateData3 = BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value))
 	}
 
 	json, _ := json.Marshal(msgInqResult)

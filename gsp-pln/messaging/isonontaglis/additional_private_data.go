@@ -32,6 +32,15 @@ func FormatInquiryString(data AdditionalPrivateData) (message string) {
 	return
 }
 
+// BuildResponseUnexpected : build response for additional private data
+func BuildResponseUnexpected(message string) (data AdditionalPrivateData) {
+	data.SwitcherID = message[:7]
+	data.RegistrationNumber = message[7:39]
+	data.AreaCode = message[39:41]
+	data.TransactionCode = message[41:44]
+	return
+}
+
 // BuildResponse : parse non tagihan listrik additional private data for inquiry response
 func BuildResponse(message string) (data AdditionalPrivateData) {
 	data.SwitcherID = message[:7]
