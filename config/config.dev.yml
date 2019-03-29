@@ -8,8 +8,10 @@ iso:
             ip:     119.82.224.226
             port:   8085
         dial:
-            ip:     103.30.85.35
-            port:   40060
+            ip:     localhost
+            port:   8085
+            # ip:     103.30.85.35
+            # port:   40060
 
 mti:
     netman:

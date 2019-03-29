@@ -8,7 +8,7 @@ import (
 // GetTypeMessage : get iso message based on message type
 func GetTypeMessage(messageType string) BuildIso {
 	switch messageType {
-	case "2810":
+	case "2800", "2810":
 		return &isonetman.Netman{}
 	case "210099504", "211099504":
 		return &isonontaglis.IsoInquiry{}

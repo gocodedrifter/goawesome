@@ -5,13 +5,13 @@ import (
 	"log"
 
 	"github.com/Ayvan/iso8583"
-	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/basic"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/util"
 )
 
 // Netman : network management
 type Netman struct {
+	Mti                   string                `json:"mti,omitempty"`
 	Payload               string                `json:"payload,omitempty"`
 	TransactionTime       string                `json:"transactionTime,omitempty"`
 	PartnerCentralID      string                `json:"partnerCentralId,omitempty"`
@@ -30,12 +30,12 @@ func (netman *Netman) Encode(message string) []byte {
 		log.Println("netman[Encode(message string)] : unable to marshal")
 	}
 
-	msg := iso8583.NewMessageExtended(config.Get().Mti.Netman.Request, iso8583.ASCII, false, true,
+	msg := iso8583.NewMessageExtended(netmanMsg.Mti, iso8583.ASCII, false, true,
 		&basic.Iso8583Format{
 			DateTimeLocalTransaction: iso8583.NewAlphanumeric(netmanMsg.TransactionTime),
 			PartnerCentralID:         iso8583.NewLlvar([]byte(netmanMsg.PartnerCentralID)),
 			ActionCode:               iso8583.NewAlphanumeric(netmanMsg.ActionCode),
-			TerminalID:               iso8583.NewAlphanumeric(netmanMsg.TerminalID),
+			TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(netmanMsg.TerminalID)),
 			AdditionalPrivateData:    iso8583.NewLllvar([]byte(FormatString(netmanMsg.AdditionalPrivateData))),
 		})
 
@@ -56,7 +56,6 @@ func (netman *Netman) Decode(message []byte) (string, error) {
 	resultFields := basic.DecodeIsoMessage(message)
 
 	netmanResult := &Netman{
-		Payload:               string(message),
 		TransactionTime:       resultFields.DateTimeLocalTransaction.Value,
 		PartnerCentralID:      string(resultFields.PartnerCentralID.Value),
 		ActionCode:            resultFields.ActionCode.Value,

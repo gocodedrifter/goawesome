@@ -21,7 +21,13 @@ func (jsonProcessor *JSONProcessor) ProssesMessage(message []byte) []byte {
 	}
 
 	buildIso := messaging.GetTypeMessage(strings.Join([]string{msgType.Mti, msgType.PrimaryAccountNumber}, ""))
+	log.Println("SONProcessor[ProssesMessage(message []byte)] : get type message : ", strings.Join([]string{msgType.Mti, msgType.PrimaryAccountNumber}, ""))
 	isobyte := messaging.EncodeMessage(buildIso, string(message))
 
 	return isobyte
+}
+
+// EncodeMessage : encode message iso bytes to json
+func (jsonProcessor *JSONProcessor) EncodeMessage(message []byte) string {
+	return ""
 }

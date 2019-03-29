@@ -12,5 +12,10 @@ func (message *Message) SetBuilder(buildProcess BuildProcess) {
 
 // Process : processing the data
 func (message *Message) Process(data []byte) []byte {
-	return message.Process(data)
+	return message.buildProcess.ProssesMessage(data)
+}
+
+// EncodeMessage : encode the message
+func (message *Message) EncodeMessage(data []byte) string {
+	return message.buildProcess.EncodeMessage(data)
 }
