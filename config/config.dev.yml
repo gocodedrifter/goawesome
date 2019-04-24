@@ -1,17 +1,27 @@
 gsp:
-    terminalId:         SOMATECH002
-    partnerCentralId:   0090029
+    terminal:  SOMATECH002
+    partner:   0090029
+    prepaid:
+        pan:    99502
+    nontaglis:
+        pan:    99504
+    postpaid:
+        pan:    99501
 
 iso:
     server:
         listener:
             ip:     119.82.224.226
             port:   8085
+            # ip:     localhost
+            # port:   8015
         dial:
-            ip:     localhost
-            port:   8085
-            # ip:     103.30.85.35
-            # port:   40060
+            ip:     103.30.85.35
+            port:   40060
+    messaging:
+        ip: 127.0.0.1
+        port: 8011
+        handlers: /iso
 
 mti:
     netman:
@@ -30,6 +40,10 @@ mti:
             request:    2401
             response:   2411
 
+db:
+    uri:        mongodb://localhost:27017
+    document:   billersystem
+    collection: messages
             
 # appname: test
     

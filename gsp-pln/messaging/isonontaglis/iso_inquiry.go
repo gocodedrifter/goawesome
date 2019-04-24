@@ -6,6 +6,7 @@ import (
 
 	"github.com/Ayvan/iso8583"
 
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/basic"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/util"
 )
@@ -17,24 +18,42 @@ type IsoInquiry struct {
 // Encode : to encode message for nontaglis inquiry
 func (isoInquiry *IsoInquiry) Encode(message string) []byte {
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : start to encode")
+	log.Println("nontaglis.IsoInquiry[Encode(message string)] : start to encode ")
 
 	msgInquiry := &Message{}
 	if err := json.Unmarshal([]byte(message), msgInquiry); err != nil {
 		log.Println("nontaglis.IsoInquiry[Encode(message string)] : unable to marshal")
 	}
 
-	msg := iso8583.NewMessageExtended(msgInquiry.Mti, iso8583.ASCII, false, true,
-		&basic.Iso8583Format{
-			PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgInquiry.PrimaryAccountNumber)),
-			Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgInquiry.Stan)),
-			DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgInquiry.DateTimeLocalTransaction),
-			MerchantCategoryCode:     iso8583.NewAlphanumeric(msgInquiry.MerchantCategoryCode),
-			BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgInquiry.BankCode))),
-			PartnerCentralID:         iso8583.NewLlvar([]byte(msgInquiry.PartnerCentralID)),
-			TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgInquiry.TerminalID)),
-			AdditionalPrivateData:    iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData))),
-		})
+	log.Println("nontaglis.IsoInquiry[Encode(message string)] : mti to encode ", msgInquiry.Mti)
+	isoFormat := &basic.Iso8583Format{
+		PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgInquiry.PrimaryAccountNumber)),
+		Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgInquiry.Stan)),
+		DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgInquiry.DateTimeLocalTransaction),
+		MerchantCategoryCode:     iso8583.NewAlphanumeric(msgInquiry.MerchantCategoryCode),
+		BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgInquiry.BankCode))),
+		PartnerCentralID:         iso8583.NewLlvar([]byte(msgInquiry.PartnerCentralID)),
+		TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgInquiry.TerminalID)),
+	}
+
+	if msgInquiry.Mti == config.Get().Mti.Inquiry.Request {
+		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData)))
+	} else if msgInquiry.Mti == config.Get().Mti.Inquiry.Response {
+		if len(msgInquiry.TransactionAmount.ValueAmount) > 0 {
+			isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgInquiry.TransactionAmount))
+		}
+		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgInquiry.ResponseCode)
+		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgInquiry.AdditionalPrivateData)))
+		log.Println("response add priv data : ", FormatDataString(msgInquiry.AdditionalPrivateData))
+		if msgInquiry.ResponseCode == "0000" {
+			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgInquiry.AdditionalPrivateData2)))
+			log.Println("response add priv data 2 : ", FormatData2String(msgInquiry.AdditionalPrivateData2))
+			isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3)))
+			log.Println("response add priv data 3 : ", FormatData3String(msgInquiry.AdditionalPrivateData3))
+		}
+	}
+
+	msg := iso8583.NewMessageExtended(msgInquiry.Mti, iso8583.ASCII, false, true, isoFormat)
 
 	packetIso, err := msg.Bytes()
 	if err != nil {
@@ -48,25 +67,30 @@ func (isoInquiry *IsoInquiry) Encode(message string) []byte {
 func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
 
 	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to decode")
-	resultFields := basic.DecodeIsoMessage(message)
+	resultFields, mti := basic.DecodeIsoMessage(message)
 
 	msgInqResult := &Message{
+		Mti:                      mti,
 		PrimaryAccountNumber:     string(resultFields.PrimaryAccountNumber.Value),
-		TransactionAmount:        basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value),
 		Stan:                     resultFields.Stan.Value,
 		DateTimeLocalTransaction: resultFields.DateTimeLocalTransaction.Value,
 		MerchantCategoryCode:     resultFields.MerchantCategoryCode.Value,
 		BankCode:                 string(resultFields.BankCode.Value),
 		PartnerCentralID:         string(resultFields.PartnerCentralID.Value),
-		ResponseCode:             resultFields.ResponseCode.Value,
 		TerminalID:               resultFields.TerminalID.Value,
 	}
 
-	if resultFields.ResponseCode.Value != "0000" {
-		msgInqResult.AdditionalPrivateData = BuildResponseUnexpected(string(resultFields.AdditionalPrivateData.Value))
-	} else {
-		msgInqResult.AdditionalPrivateData = BuildResponse(string(resultFields.AdditionalPrivateData.Value))
-		msgInqResult.AdditionalPrivateData3 = BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value))
+	if mti == config.Get().Mti.Inquiry.Request {
+		msgInqResult.AdditionalPrivateData = BuildInquiry(string(resultFields.AdditionalPrivateData.Value))
+	} else if mti == config.Get().Mti.Inquiry.Response {
+		msgInqResult.ResponseCode = resultFields.ResponseCode.Value
+		msgInqResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+		if resultFields.ResponseCode.Value != "0000" {
+			msgInqResult.AdditionalPrivateData = BuildInquiry(string(resultFields.AdditionalPrivateData.Value))
+		} else {
+			msgInqResult.AdditionalPrivateData = BuildResponse(string(resultFields.AdditionalPrivateData.Value))
+			msgInqResult.AdditionalPrivateData3 = BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value))
+		}
 	}
 
 	json, _ := json.Marshal(msgInqResult)

@@ -45,6 +45,7 @@ func (manager *IsoManagerDial) GetListenerMessage() {
 		case message := <-ServerDialOut:
 			if len(message) > 0 {
 				manager.socket.Write(message)
+				// JSONMessage <- []byte("ok")
 			}
 		}
 	}

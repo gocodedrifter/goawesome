@@ -12,7 +12,7 @@ type OriginalData struct {
 
 // FormatReversalString : format reversal string
 func FormatReversalString(data OriginalData) (message string) {
-	message = fmt.Sprintf("%s%s%s%s", data.OriginalMti, data.OriginalStan, data.OriginalTime, data.OriginalBankCode)
+	message = fmt.Sprintf("%04s%012s%014s%07s", data.OriginalMti, data.OriginalStan, data.OriginalTime, data.OriginalBankCode)
 	return
 }
 

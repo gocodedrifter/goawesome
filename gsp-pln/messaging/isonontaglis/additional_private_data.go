@@ -32,8 +32,8 @@ func FormatInquiryString(data AdditionalPrivateData) (message string) {
 	return
 }
 
-// BuildResponseUnexpected : build response for additional private data
-func BuildResponseUnexpected(message string) (data AdditionalPrivateData) {
+// BuildInquiry : build response for additional private data
+func BuildInquiry(message string) (data AdditionalPrivateData) {
 	data.SwitcherID = message[:7]
 	data.RegistrationNumber = message[7:39]
 	data.AreaCode = message[39:41]

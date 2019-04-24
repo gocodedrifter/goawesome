@@ -1,5 +1,7 @@
 package processor
 
+import "log"
+
 // Message : message
 type Message struct {
 	buildProcess BuildProcess
@@ -7,6 +9,7 @@ type Message struct {
 
 // SetBuilder : set type builder
 func (message *Message) SetBuilder(buildProcess BuildProcess) {
+	log.Println("message[SetBuilder] : ", buildProcess)
 	message.buildProcess = buildProcess
 }
 
@@ -15,7 +18,7 @@ func (message *Message) Process(data []byte) []byte {
 	return message.buildProcess.ProssesMessage(data)
 }
 
-// EncodeMessage : encode the message
-func (message *Message) EncodeMessage(data []byte) string {
-	return message.buildProcess.EncodeMessage(data)
+// DecodeMessage : encode the message
+func (message *Message) DecodeMessage(data []byte) string {
+	return message.buildProcess.DecodeMessage(data)
 }

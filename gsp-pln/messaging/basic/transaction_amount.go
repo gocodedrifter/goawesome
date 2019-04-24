@@ -17,10 +17,12 @@ func BuildTrxAmt(isoCurrencyCode, currencyMinorUnit, valueAmount string) (messag
 
 // ParseMessageToTrxAmt : parse message to Transaction amount
 func ParseMessageToTrxAmt(message string) (transactionAmount TransactionAmount) {
-	transactionAmount.IsoCurrencyCode = message[:3]
-	transactionAmount.CurrencyMinorUnit = message[3:4]
-	transactionAmount.ValueAmount = message[4:]
 
+	if len(message) > 0 {
+		transactionAmount.IsoCurrencyCode = message[:3]
+		transactionAmount.CurrencyMinorUnit = message[3:4]
+		transactionAmount.ValueAmount = message[4:]
+	}
 	return
 }
 

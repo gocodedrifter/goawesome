@@ -9,8 +9,17 @@ import (
 // Config : configuration for 2pay biller payment
 type Config struct {
 	Gsp struct {
-		TerminalID       string
-		PartnerCentralID string
+		Terminal string
+		Partner  string
+		Prepaid  struct {
+			Pan string
+		}
+		Nontaglis struct {
+			Pan string
+		}
+		Postpaid struct {
+			Pan string
+		}
 	}
 
 	Iso struct {
@@ -23,6 +32,11 @@ type Config struct {
 				IP   string
 				Port string
 			}
+		}
+		Messaging struct {
+			IP       string
+			Port     string
+			Handlers string
 		}
 	}
 
@@ -47,6 +61,12 @@ type Config struct {
 				Response string
 			}
 		}
+	}
+
+	Db struct {
+		URI        string
+		Document   string
+		Collection string
 	}
 }
 

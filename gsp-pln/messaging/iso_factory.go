@@ -1,21 +1,43 @@
 package messaging
 
 import (
+	"log"
+	"strings"
+
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/isonetman"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/isonontaglis"
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/isopostpaid"
 )
 
 // GetTypeMessage : get iso message based on message type
 func GetTypeMessage(messageType string) BuildIso {
 	switch messageType {
-	case "2800", "2810":
+	case config.Get().Mti.Netman.Request, config.Get().Mti.Netman.Response:
+		log.Println("IsoFactory[GetTypeMessage] netman : ", messageType)
 		return &isonetman.Netman{}
-	case "210099504", "211099504":
+	case strings.Join([]string{config.Get().Mti.Inquiry.Request, config.Get().Gsp.Nontaglis.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Inquiry.Response, config.Get().Gsp.Nontaglis.Pan}, ""):
 		return &isonontaglis.IsoInquiry{}
-	case "220099504", "221099504":
+	case strings.Join([]string{config.Get().Mti.Payment.Request, config.Get().Gsp.Nontaglis.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Payment.Response, config.Get().Gsp.Nontaglis.Pan}, ""):
 		return &isonontaglis.IsoPayment{}
-	case "240099504", "240199504", "241099504", "241199504":
+	case strings.Join([]string{config.Get().Mti.Reversal.Request, config.Get().Gsp.Nontaglis.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Response, config.Get().Gsp.Nontaglis.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Repeat.Request, config.Get().Gsp.Nontaglis.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Repeat.Response, config.Get().Gsp.Nontaglis.Pan}, ""):
 		return &isonontaglis.IsoReversal{}
+	case strings.Join([]string{config.Get().Mti.Inquiry.Request, config.Get().Gsp.Postpaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Inquiry.Response, config.Get().Gsp.Postpaid.Pan}, ""):
+		return &isopostpaid.IsoInquiry{}
+	case strings.Join([]string{config.Get().Mti.Payment.Request, config.Get().Gsp.Postpaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Payment.Response, config.Get().Gsp.Postpaid.Pan}, ""):
+		return &isopostpaid.IsoPayment{}
+	case strings.Join([]string{config.Get().Mti.Reversal.Request, config.Get().Gsp.Postpaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Response, config.Get().Gsp.Postpaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Repeat.Request, config.Get().Gsp.Postpaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Reversal.Repeat.Response, config.Get().Gsp.Postpaid.Pan}, ""):
+		return &isopostpaid.IsoReversal{}
 	default:
 		return nil
 	}

@@ -5,6 +5,7 @@ import "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/basic"
 // Message : message for iso non tagihan listrik
 type Message struct {
 	Mti                      string                  `json:"mti,omitempty"`
+	Payload                  string                  `json:"payload,omitempty"`
 	PrimaryAccountNumber     string                  `json:"primaryAccountNumber,omitempty"`
 	TransactionAmount        basic.TransactionAmount `json:"transactionAmount,omitempty"`
 	Stan                     string                  `json:"stan,omitempty"`

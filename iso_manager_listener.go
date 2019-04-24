@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 
+	"github.com/tidwall/gjson"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 )
 
@@ -54,7 +59,19 @@ func (manager *IsoManagerListener) Receive(client *Client) {
 		}
 		if length > 0 {
 			log.Println("Received call from client : " + string(message))
-			MessageClientIn <- message
+			// MessageClientIn <- message
+			jsonData := map[string]string{"message": string(message)}
+			jsonValue, _ := json.Marshal(jsonData)
+			response, err := http.Post(fmt.Sprintf("http://%s:%s%s", config.Get().Iso.Messaging.IP,
+				config.Get().Iso.Messaging.Port, config.Get().Iso.Messaging.Handlers), "application/json",
+				bytes.NewBuffer(jsonValue))
+			if err != nil {
+				fmt.Printf("The HTTP request failed with error %s\n", err)
+			} else {
+				data, _ := ioutil.ReadAll(response.Body)
+				byteMessage := gjson.Get(string(data), "message")
+				client.socket.Write([]byte(byteMessage.String()))
+			}
 		}
 	}
 }
