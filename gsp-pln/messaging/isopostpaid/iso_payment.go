@@ -26,6 +26,7 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 	log.Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgPayment := basic.EncodeJSONFormatToISO(msgJSON, message)
 
+	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPayment.TransactionAmount))
 	isoFormat.AdditionalPrivateData =
 		iso8583.NewLllvar([]byte(FormatDataString(msgPayment.AdditionalPrivateData.(*AdditionalPrivateData))))
 

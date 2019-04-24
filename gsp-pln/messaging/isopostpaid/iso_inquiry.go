@@ -18,12 +18,11 @@ type IsoInquiry struct {
 func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 	log.Println("postpaid.IsoInquiry[Encode(message string)] : start to encode ")
 
+	log.Println("postpaid.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData2: &AdditionalPrivateData2{},
 	}
-
-	log.Printf("%v\n", message.AdditionalPrivateData)
 
 	log.Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgInquiry := basic.EncodeJSONFormatToISO(msgJSON, message)

@@ -15,27 +15,21 @@ type IsoInquiry struct {
 }
 
 // Encode : to encode message for prepaid inquiry
-func (isoInquiry *IsoInquiry) Encode(message string) []byte {
+func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 	log.Println("prepaid.IsoInquiry[Encode(message string)] : start to encode ")
 
-	msgInquiry := &Message{}
-	if err := json.Unmarshal([]byte(message), msgInquiry); err != nil {
-		log.Println("prepaid.IsoInquiry[Encode(message string)] : unable to marshal")
+	log.Println("prepaid.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
+	message := &basic.Message{
+		AdditionalPrivateData:  &AdditionalPrivateData{},
+		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("prepaid.IsoInquiry[Encode(message string)] : mti to encode ", msgInquiry.Mti)
-	isoFormat := &basic.Iso8583Format{
-		PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgInquiry.PrimaryAccountNumber)),
-		Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgInquiry.Stan)),
-		DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgInquiry.DateTimeLocalTransaction),
-		MerchantCategoryCode:     iso8583.NewAlphanumeric(msgInquiry.MerchantCategoryCode),
-		BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgInquiry.BankCode))),
-		PartnerCentralID:         iso8583.NewLlvar([]byte(msgInquiry.PartnerCentralID)),
-		TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgInquiry.TerminalID)),
-	}
+	log.Println("prepaid.IsoInquiry[Encode(message string)] : encode json format to iso")
+	isoFormat, msgInquiry := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	if msgInquiry.Mti == config.Get().Mti.Inquiry.Request {
-		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData)))
+		isoFormat.AdditionalPrivateData =
+			iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
 	} else if msgInquiry.Mti == config.Get().Mti.Inquiry.Response {
 		if len(msgInquiry.TransactionAmount.ValueAmount) > 0 {
 			isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgInquiry.TransactionAmount))
@@ -43,8 +37,10 @@ func (isoInquiry *IsoInquiry) Encode(message string) []byte {
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgInquiry.ResponseCode)
 
 		if msgInquiry.ResponseCode == "0000" {
-			isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgInquiry.AdditionalPrivateData)))
-			isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3)))
+			isoFormat.AdditionalPrivateData =
+				iso8583.NewLllvar([]byte(FormatDataString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
+			isoFormat.AdditionalPrivateData3 =
+				iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3.(*AdditionalPrivateData3))))
 		}
 	}
 
@@ -56,5 +52,39 @@ func (isoInquiry *IsoInquiry) Encode(message string) []byte {
 	}
 
 	return util.EncapsulateBytes(packetIso)
+
+}
+
+// Decode : decode from byte iso8583 to prepaid inquiry
+func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
+
+	log.Println("prepaid.IsoInquiry[Decode(message string)] : start to decode")
+	resultFields, mti := basic.DecodeIsoMessage(message)
+
+	log.Println("prepaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	msgInqResult := basic.AssignISOFormatToMessage(resultFields, mti)
+
+	if mti == config.Get().Mti.Inquiry.Request {
+		msgInqResult.AdditionalPrivateData = BuildInquiry(string(resultFields.AdditionalPrivateData.Value))
+	} else if mti == config.Get().Mti.Inquiry.Response {
+		msgInqResult.ResponseCode = resultFields.ResponseCode.Value
+		if len(resultFields.TransactionAmount.Value) > 0 {
+			msgInqResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+		}
+
+		if resultFields.ResponseCode.Value != "0000" {
+			msgInqResult.AdditionalPrivateData = BuildInquiry(
+				string(resultFields.AdditionalPrivateData.Value))
+		} else {
+			msgInqResult.AdditionalPrivateData = BuildInquiryResponse(
+				string(resultFields.AdditionalPrivateData.Value))
+
+			msgInqResult.AdditionalPrivateData3 = BuildData3Response(string(resultFields.AdditionalPrivateData3.Value))
+		}
+	}
+
+	json, _ := json.Marshal(msgInqResult)
+
+	return string(json), nil
 
 }
