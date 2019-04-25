@@ -32,8 +32,8 @@ type AdditionalPrivateData struct {
 	TokenNumber                            string `json:"tokenNumber,omitempty"`
 }
 
-// FormatInquiryString : build postpaid additional private data for inquiry request
-func FormatInquiryString(data *AdditionalPrivateData) (message string) {
+// FormatInqReq : build postpaid additional private data for inquiry request
+func FormatInqReq(data *AdditionalPrivateData) (message string) {
 	message = fmt.Sprintf("%07s%011s%012s%01s", data.SwitcherID, data.MeterSerialNumber, data.SubscriberID, data.Flag)
 
 	return
@@ -45,12 +45,25 @@ func FormatPurchaseReq(data *AdditionalPrivateData) (message string) {
 		data.SwitcherID, data.MeterSerialNumber, data.SubscriberID, data.Flag, data.PLNReferenceNumber,
 		data.GSPReferenceNumber, data.SubscriberName, data.SubscriberSegmentation, data.PowerConsumingCategory,
 		data.MinorUnitOfAdminCharge, data.AdminCharge, data.BuyingOptions)
+	return
+}
+
+// FormatPurchaseRes : format purchase response for prepaid
+func FormatPurchaseRes(data *AdditionalPrivateData) (message string) {
+
+	message = fmt.Sprintf("%07s%011s%012s%01s%-32s%-32s%08s%-25s%-4s%09s%01s%01s%010s%01s%010s%01s%010s%01s%010s%01s%010s%01s%012s%01s%010s%020s",
+		data.SwitcherID, data.MeterSerialNumber, data.SubscriberID, data.Flag, data.PLNReferenceNumber,
+		data.GSPReferenceNumber, data.VendingReceiptNumber, data.SubscriberName, data.SubscriberSegmentation,
+		data.PowerConsumingCategory, data.BuyingOptions, data.MinorUnitOfAdminCharge, data.AdminCharge, data.MinorUnitOfStampDuty,
+		data.StampDuty, data.MinorUnitOfValueAddedTax, data.ValueAddedTax, data.MinorUnitOfPublicLightingTax, data.PublicLightingTax,
+		data.MinorUnitOfCustomerPayablesInstallment, data.CustomerPayablesInstallment, data.MinorUnitOfPowerPurchase, data.PowerPurchase,
+		data.MinorUnitOfPurchasedKwhUnit, data.PurchasedKwhUnit, data.TokenNumber)
 
 	return
 }
 
-// FormatDataString : format data string for response
-func FormatDataString(data *AdditionalPrivateData) (message string) {
+// FormatInqRes : format data string for response
+func FormatInqRes(data *AdditionalPrivateData) (message string) {
 
 	message = fmt.Sprintf("%07s%011s%012s%01s%-32s%-32s%-25s%-4s%09s%01s%010s",
 		data.SwitcherID, data.MeterSerialNumber, data.SubscriberID, data.Flag, data.PLNReferenceNumber,
@@ -60,8 +73,8 @@ func FormatDataString(data *AdditionalPrivateData) (message string) {
 	return
 }
 
-// BuildInquiry : build inquiry
-func BuildInquiry(message string) (data AdditionalPrivateData) {
+// BuildInquiryReq : build inquiry
+func BuildInquiryReq(message string) (data AdditionalPrivateData) {
 	data.SwitcherID = message[:7]
 	data.MeterSerialNumber = message[7:18]
 	data.SubscriberID = message[18:30]
@@ -69,7 +82,7 @@ func BuildInquiry(message string) (data AdditionalPrivateData) {
 	return
 }
 
-// BuildDataResponse : parse prepaid for additional private data for inquiry response
+// BuildInquiryResponse : parse prepaid for additional private data for inquiry response
 func BuildInquiryResponse(message string) (data AdditionalPrivateData) {
 	data.SwitcherID = message[:7]
 	data.MeterSerialNumber = message[7:18]
@@ -83,6 +96,9 @@ func BuildInquiryResponse(message string) (data AdditionalPrivateData) {
 	data.MinorUnitOfAdminCharge = message[133:134]
 	data.AdminCharge = message[134:144]
 
+	if len(message) > 144 {
+		data.BuyingOptions = message[144:145]
+	}
 	return
 }
 

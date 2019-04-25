@@ -25,6 +25,7 @@ func (jsonProcessor *JSONProcessor) ProssesMessage(message []byte) []byte {
 	log.Println("JSONProcessor[ProssesMessage(message []byte)] : get type message : ", strings.Join([]string{msgType.Mti, msgType.PrimaryAccountNumber}, ""))
 	isobyte := messaging.EncodeMessage(buildIso, string(message))
 
+	log.Println("JSONProcessor[ProssesMessage(message []byte)] : result iso : ", string(isobyte))
 	return isobyte
 }
 

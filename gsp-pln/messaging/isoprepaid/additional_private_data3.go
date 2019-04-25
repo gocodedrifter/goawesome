@@ -3,6 +3,7 @@ package isoprepaid
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -38,9 +39,13 @@ func BuildData3Response(message string) (data AdditionalPrivateData3) {
 	data.MaxKwhLimit = message[22:27]
 	data.TotalRepeat = message[27:28]
 
+	log.Println("testing : ", data.TotalRepeat)
+	log.Println("rest value : ", message[28:])
 	repeat, _ := strconv.Atoi(data.TotalRepeat)
 	for powerLength := 0; powerLength < repeat; powerLength++ {
-		data.PowerPurchaseUnsold[powerLength] = BuildPower(message[(28 + (powerLength * 11)):(28 + ((powerLength + 1) * 11))])
+		log.Println("power length : ", powerLength)
+		data.PowerPurchaseUnsold = append(data.PowerPurchaseUnsold,
+			BuildPower(message[(28+(powerLength*11)):(28+((powerLength+1)*11))]))
 	}
 
 	return
