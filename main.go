@@ -1,16 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"log"
-	"net/http"
-	"sync"
-
-	"github.com/gorilla/mux"
-	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
-)
-
-var wg = sync.WaitGroup{}
+// var wg = sync.WaitGroup{}
 
 // GetMessageISO : get message iso
 // func GetMessageISO(w http.ResponseWriter, req *http.Request) {
@@ -30,11 +20,12 @@ var wg = sync.WaitGroup{}
 
 func main() {
 
+	StartAPI()
 	// log.Println("starting biller payment ...")
 
-	wg.Add(3)
-	go StartListenerServer()
-	go StartDialManager()
+	// wg.Add(3)
+	// go StartListenerServer()
+	// go StartDialManager()
 
 	// go func() {
 	// 	log.Println("[MessageExchange] : start the function")
@@ -55,25 +46,25 @@ func main() {
 	// 	}
 	// }()
 
-	go func() {
-		log.Println("[MessageExchange] : start the function")
-		defer wg.Done()
-		for {
-			select {
-			case message := <-MessageClientIn:
-				log.Println("[MessageExchange] : received message from client ")
-				ServerDialOut <- message
-			case message := <-ServerDialIn:
-				MessageClientOut <- message
-			}
-		}
-	}()
+	// go func() {
+	// 	log.Println("[MessageExchange] : start the function")
+	// 	defer wg.Done()
+	// 	for {
+	// 		select {
+	// 		case message := <-MessageClientIn:
+	// 			log.Println("[MessageExchange] : received message from client ")
+	// 			ServerDialOut <- message
+	// 		case message := <-ServerDialIn:
+	// 			MessageClientOut <- message
+	// 		}
+	// 	}
+	// }()
 
-	router := mux.NewRouter()
-	router.HandleFunc(config.Get().Iso.Messaging.Handlers, PostMessageISO).Methods("POST")
+	// router := mux.NewRouter()
+	// router.HandleFunc(config.Get().Iso.Messaging.Handlers, PostMessageISO).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", config.Get().Iso.Messaging.IP,
-		config.Get().Iso.Messaging.Port), router))
+	// log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", config.Get().Iso.Messaging.IP,
+	// 	config.Get().Iso.Messaging.Port), router))
 
 	// for {
 	// 	reader := bufio.NewReader(os.Stdin)
@@ -87,7 +78,7 @@ func main() {
 	// 	MessageClientIn <- producer.Process([]byte(strings.TrimRight(message, "\n")))
 	// }
 
-	wg.Wait()
+	// wg.Wait()
 
 	// fmt.Println("starting")
 	// ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)

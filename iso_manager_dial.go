@@ -14,44 +14,32 @@ type IsoManagerDial struct {
 }
 
 // Receive : receive the incoming message from iso server (gsp/pln/etc ...)
-func (manager *IsoManagerDial) Receive() {
-	log.Println("IsoManagerDial[Receive()] : starting to receive ")
-	defer wg.Done()
+func (manager *IsoManagerDial) Receive(result chan []byte) {
+	log.Println("IsoManagerDial[Receive(result chan []byte)] : start to receive message from socket")
 	for {
 		message := make([]byte, 4096)
 		length, err := manager.socket.Read(message)
 		if err != nil {
-			log.Println("[Receive()] : the connection to dial is closed : ",
+			log.Println("[Receive(result chan []byte)] : the connection to dial is closed : ",
 				config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 
-			log.Println("[Receive()] : try to redial ")
+			log.Println("[Receive(result chan []byte)] : try to redial ")
 			manager.socket = handleDialConnection()
 		}
 
 		if length > 0 {
-			log.Println("[Receive()] : Received message from iso server (gsp/pln/etc ...) : ",
+			log.Println("[Receive(result chan []byte)] : Received message from iso server (gsp/pln/etc ...) : ",
 				string(message))
-			ServerDialIn <- message
+			result <- message
+			break
 		}
 	}
-}
 
-// GetListenerMessage : get listener message
-func (manager *IsoManagerDial) GetListenerMessage() {
-	log.Println("IsoManagerDial[GetListenerMessage()] : get listener message  ")
-	defer wg.Done()
-	for {
-		select {
-		case message := <-ServerDialOut:
-			if len(message) > 0 {
-				manager.socket.Write(message)
-				// JSONMessage <- []byte("ok")
-			}
-		}
-	}
+	log.Println("IsoManagerDial[Receive(result chan []byte)] : end receive message from socket")
 }
 
 func handleDialConnection() net.Conn {
+	log.Println("IsoManagerDial[handleDialConnection()] : start connection")
 	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s",
 		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port))
 
@@ -68,24 +56,32 @@ func handleDialConnection() net.Conn {
 		panic(err.Error())
 	}
 
-	// connection.(*net.TCPConn).SetDeadline(time.Time{})
+	log.Println("IsoManagerDial[handleDialConnection()] : end connection")
 
 	return connection
 }
 
 // StartDialManager : start dial manager
-func StartDialManager() {
-	defer wg.Done()
-	log.Println("[StartDialManager()] : start to dial manager")
+func StartDialManager(message []byte, result chan []byte) {
+	log.Println("IsoManagerDial.[StartDialManager()] : start to dial manager")
 
+	log.Println("IsoManagerDial.[StartDialManager()] : starting dial connection")
 	connection := handleDialConnection()
 
 	manager := &IsoManagerDial{
 		socket: connection,
 	}
 
-	wg.Add(2)
-	go manager.Receive()
-	go manager.GetListenerMessage()
-	wg.Wait()
+	log.Println("IsoManagerDial.[StartDialManager()] : start thread to recieve message")
+	msg := make(chan []byte)
+	go manager.Receive(msg)
+	manager.socket.Write(message)
+
+	// message exchange
+	msgIn := <-msg
+	result <- msgIn
+
+	defer connection.Close()
+	defer manager.socket.Close()
+	log.Println("IsoManagerDial.[StartDialManager()] : start to dial manager")
 }

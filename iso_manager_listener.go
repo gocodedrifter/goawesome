@@ -33,16 +33,16 @@ func (manager *IsoManagerListener) Start() {
 				delete(manager.clients, connection)
 				log.Println("A Connection has terminated!")
 			}
-		case message := <-MessageClientOut:
-			log.Println("send back to client : ", string(message))
-			for connection := range manager.clients {
-				select {
-				case connection.data <- message:
-				default:
-					close(connection.data)
-					delete(manager.clients, connection)
-				}
-			}
+			// case message := <-MessageClientOut:
+			// 	log.Println("send back to client : ", string(message))
+			// 	for connection := range manager.clients {
+			// 		select {
+			// 		case connection.data <- message:
+			// 		default:
+			// 			close(connection.data)
+			// 			delete(manager.clients, connection)
+			// 		}
+			// 	}
 		}
 	}
 }
