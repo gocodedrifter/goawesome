@@ -2,13 +2,11 @@ package db
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -40,17 +38,4 @@ func loadDBConfig() *Config {
 
 	billerSystem := client.Database(config.Get().Db.Document)
 	return &Config{billerSystem}
-}
-
-// Save : save json
-func Save(json []byte) {
-	var dataToSave interface{}
-	bson.UnmarshalExtJSON(json, true, &dataToSave)
-	collection := GetDB().Collection("messages")
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	id, err := collection.InsertOne(ctx, &dataToSave)
-	if err != nil {
-		log.Println("unable to insert data : ", err.Error())
-	}
-	log.Println(id.InsertedID)
 }

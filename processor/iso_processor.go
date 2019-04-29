@@ -12,8 +12,8 @@ import (
 type IsoProcessor struct {
 }
 
-// ProssesMessage : process message
-func (isoProcessor *IsoProcessor) ProssesMessage(message []byte) []byte {
+// EncodeMessage : process message
+func (isoProcessor *IsoProcessor) EncodeMessage(message []byte) []byte {
 	return nil
 }
 

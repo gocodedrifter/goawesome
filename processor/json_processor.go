@@ -13,8 +13,8 @@ import (
 type JSONProcessor struct {
 }
 
-// ProssesMessage : processing message from json format to iso bytes
-func (jsonProcessor *JSONProcessor) ProssesMessage(message []byte) []byte {
+// EncodeMessage : processing message from json format to iso bytes
+func (jsonProcessor *JSONProcessor) EncodeMessage(message []byte) []byte {
 	log.Println("JsonProcessor[ProssesMessage(message []byte)] : start")
 	msgType := &basic.MessageType{}
 	if err := json.Unmarshal(message, msgType); err != nil {

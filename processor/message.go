@@ -15,7 +15,7 @@ func (message *Message) SetBuilder(buildProcess BuildProcess) {
 
 // Process : processing the data
 func (message *Message) Process(data []byte) []byte {
-	return message.buildProcess.ProssesMessage(data)
+	return message.buildProcess.EncodeMessage(data)
 }
 
 // DecodeMessage : encode the message
