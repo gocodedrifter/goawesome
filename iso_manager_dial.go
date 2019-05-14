@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 )
@@ -49,12 +50,14 @@ func handleDialConnection() net.Conn {
 		panic(err.Error())
 	}
 
-	err = connection.(*net.TCPConn).SetKeepAlive(true)
+	err = connection.(*net.TCPConn).SetKeepAlive(false)
 	if err != nil {
 		log.Println("IsoManagerDial[handleDialConnection()] : unable to keep the server dial always live : ",
 			config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 		panic(err.Error())
 	}
+
+	connection.SetDeadline(time.Now().Add(5 * time.Second))
 
 	log.Println("IsoManagerDial[handleDialConnection()] : end connection")
 

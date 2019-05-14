@@ -14,16 +14,16 @@ import (
 type IsoPurchase struct {
 }
 
-// Encode : to encode message for prepaid payment iso8583 format
+// Encode : to encode message for prepaid purchase iso8583 format
 func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 
-	log.Println("prepaid.IsoPayment[Encode(message string)] : start to encode")
+	log.Println("prepaid.IsoPurchase[Encode(message string)] : start to encode")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("prepaid.IsoInquiry[Encode(message string)] : encode json format to iso")
+	log.Println("prepaid.IsoPurchase[Encode(message string)] : encode json format to iso")
 	isoFormat, msgPurchase := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPurchase.TransactionAmount))
@@ -51,21 +51,21 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 		panic(err.Error())
 	}
 
-	log.Println("postpaid.IsoPayment[Encode(message string)] : end to encode")
+	log.Println("prepaid.IsoPurchase[Encode(message string)] : end to encode")
 	return util.EncapsulateBytes(packetIso)
 
 }
 
-// Decode : decode from byte iso8583 to postpaid payment
+// Decode : decode from byte iso8583 to prepaid purchase
 func (isoPurchase *IsoPurchase) Decode(message []byte) (string, error) {
 
-	log.Println("postpaid.IsoPayment[Decode(message string)] : start to decode")
+	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	log.Println("postpaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to assign iso to message")
 	msgPurResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
-	if mti == config.Get().Mti.Payment.Response {
+	if mti == config.Get().Mti.Payment.Response || mti == config.Get().Mti.Advice.Response || mti == config.Get().Mti.Advice.Repeat.Response {
 		msgPurResult.ResponseCode = resultFields.ResponseCode.Value
 		msgPurResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
 
@@ -79,7 +79,7 @@ func (isoPurchase *IsoPurchase) Decode(message []byte) (string, error) {
 		}
 	}
 
-	log.Println("postpaid.IsoPayment[Decode(message string)] json decode : ", &msgPurResult)
+	log.Println("prepaid.IsoPurchase[Decode(message string)] json decode : ", &msgPurResult)
 
 	json, _ := json.Marshal(msgPurResult)
 

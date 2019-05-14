@@ -61,6 +61,14 @@ type Config struct {
 				Response string
 			}
 		}
+		Advice struct {
+			Request  string
+			Response string
+			Repeat   struct {
+				Request  string
+				Response string
+			}
+		}
 	}
 
 	Db struct {

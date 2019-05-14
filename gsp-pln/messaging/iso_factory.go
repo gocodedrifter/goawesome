@@ -45,6 +45,11 @@ func GetTypeMessage(messageType string) BuildIso {
 	case strings.Join([]string{config.Get().Mti.Payment.Request, config.Get().Gsp.Prepaid.Pan}, ""),
 		strings.Join([]string{config.Get().Mti.Payment.Response, config.Get().Gsp.Prepaid.Pan}, ""):
 		return &isoprepaid.IsoPurchase{}
+	case strings.Join([]string{config.Get().Mti.Advice.Request, config.Get().Gsp.Prepaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Advice.Response, config.Get().Gsp.Prepaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Advice.Repeat.Request, config.Get().Gsp.Prepaid.Pan}, ""),
+		strings.Join([]string{config.Get().Mti.Advice.Repeat.Response, config.Get().Gsp.Prepaid.Pan}, ""):
+		return &isoprepaid.IsoPurchase{}
 	default:
 		return nil
 	}

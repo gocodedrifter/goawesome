@@ -16,8 +16,10 @@ iso:
             # ip:     localhost
             # port:   8015
         dial:
-            ip:     103.30.85.35
-            port:   40060
+            ip:     119.82.224.226
+            port:   8035
+            # ip:     103.30.85.35
+            # port:   40060
     messaging:
         ip: 127.0.0.1
         port: 8011
@@ -39,6 +41,12 @@ mti:
         repeat:
             request:    2401
             response:   2411
+    advice:
+        request:    2220
+        response:   2230
+        repeat:
+            request:    2221
+            response:   2231
 
 db:
     uri:        mongodb://localhost:27017
