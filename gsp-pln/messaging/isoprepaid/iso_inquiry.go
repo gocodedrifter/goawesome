@@ -18,7 +18,7 @@ type IsoInquiry struct {
 func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 	log.Println("prepaid.IsoInquiry[Encode(message string)] : start to encode ")
 
-	log.Println("prepaid.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
+	log.Println("prepaid.IsoInquiry[Encode(message string)] : initialize message to assign interface with isoprepaid message")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData3: &AdditionalPrivateData3{},
@@ -36,11 +36,16 @@ func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 		}
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgInquiry.ResponseCode)
 
+		log.Println("prepaid.IsoInquiry[Encode(message string)] : check the response code")
 		if msgInquiry.ResponseCode == "0000" {
 			isoFormat.AdditionalPrivateData =
 				iso8583.NewLllvar([]byte(FormatInqRes(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
 			isoFormat.AdditionalPrivateData3 =
 				iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3.(*AdditionalPrivateData3))))
+		} else if msgInquiry.ResponseCode != "0000" {
+			log.Println("prepaid.IsoInquiry[Encode(message string)] : response code not 0000")
+			isoFormat.AdditionalPrivateData =
+				iso8583.NewLllvar([]byte(FormatInqReq(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
 		}
 	}
 
@@ -80,7 +85,7 @@ func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
 				string(resultFields.AdditionalPrivateData.Value))
 
 			log.Println("data private 3 : ", string(resultFields.AdditionalPrivateData3.Value))
-			msgInqResult.AdditionalPrivateData3 = BuildData3Response(string(resultFields.AdditionalPrivateData3.Value))
+			msgInqResult.AdditionalPrivateData3 = BuildData3(string(resultFields.AdditionalPrivateData3.Value))
 		}
 	}
 

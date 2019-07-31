@@ -17,36 +17,30 @@ type IsoReversal struct {
 }
 
 // Encode : to encode message for nontaglis reversal
-func (isoReversal *IsoReversal) Encode(message string) []byte {
+func (isoReversal *IsoReversal) Encode(msgJSON string) []byte {
 
-	log.Println("nontaglis.IsoReversal[Encode(message string)] : start to encode")
+	log.Println("postpaid.IsoReversal[Encode(message string)] : start to encode")
 
-	msgReversal := &Message{}
-	if err := json.Unmarshal([]byte(message), msgReversal); err != nil {
-		log.Println("nontaglis.IsoReversal[Encode(message string)] : unable to marshal")
+	message := &basic.Message{
+		AdditionalPrivateData:  &AdditionalPrivateData{},
+		AdditionalPrivateData2: &AdditionalPrivateData2{},
+		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	isoFormat := &basic.Iso8583Format{
-		PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgReversal.PrimaryAccountNumber)),
-		TransactionAmount:        iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgReversal.TransactionAmount)),
-		Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgReversal.Stan)),
-		DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgReversal.DateTimeLocalTransaction),
-		MerchantCategoryCode:     iso8583.NewAlphanumeric(msgReversal.MerchantCategoryCode),
-		BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgReversal.BankCode))),
-		PartnerCentralID:         iso8583.NewLlvar([]byte(msgReversal.PartnerCentralID)),
-		TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgReversal.TerminalID)),
-		AdditionalPrivateData:    iso8583.NewLllvar([]byte(FormatDataString(msgReversal.AdditionalPrivateData))),
-		OriginalData:             iso8583.NewLlvar([]byte(FormatReversalString(msgReversal.OriginalData))),
-		// AdditionalPrivateData2:   iso8583.NewLllvar([]byte(FormatData2String(msgReversal.AdditionalPrivateData2))),
-		AdditionalPrivateData3: iso8583.NewLllvar([]byte(FormatData3String(msgReversal.AdditionalPrivateData3))),
-	}
+	log.Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
+	isoFormat, msgReversal := basic.EncodeJSONFormatToISO(msgJSON, message)
 
-	if msgReversal.Mti == config.Get().Mti.Reversal.Response {
+	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgReversal.TransactionAmount))
+	isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgReversal.AdditionalPrivateData.(*AdditionalPrivateData))))
+	isoFormat.OriginalData = iso8583.NewLlvar([]byte(basic.FormatReversalString(msgReversal.OriginalData)))
+	isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgReversal.AdditionalPrivateData3.(*AdditionalPrivateData3))))
+
+	if msgReversal.Mti == config.Get().Mti.Reversal.Response || msgReversal.Mti == config.Get().Mti.Reversal.Repeat.Response {
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgReversal.ResponseCode)
 	}
 
-	if len(msgReversal.AdditionalPrivateData2.PowerConsumingCategory) > 0 {
-		isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgReversal.AdditionalPrivateData2)))
+	if len(msgReversal.AdditionalPrivateData2.(*AdditionalPrivateData2).PowerConsumingCategory) > 0 {
+		isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgReversal.AdditionalPrivateData2.(*AdditionalPrivateData2))))
 	}
 
 	msg := iso8583.NewMessageExtended(msgReversal.Mti, iso8583.ASCII, false, true, isoFormat)
@@ -65,25 +59,16 @@ func (isoReversal *IsoReversal) Decode(message []byte) (string, error) {
 	log.Println("nontaglis.IsoReversal[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	msgReversal := &Message{
-		Mti: mti,
-		// Payload:                  string(message[2:]),
-		PrimaryAccountNumber:     string(resultFields.PrimaryAccountNumber.Value),
-		TransactionAmount:        basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value),
-		Stan:                     resultFields.Stan.Value,
-		SettlementDate:           resultFields.SettlementDate.Value,
-		DateTimeLocalTransaction: resultFields.DateTimeLocalTransaction.Value,
-		MerchantCategoryCode:     resultFields.MerchantCategoryCode.Value,
-		BankCode:                 string(resultFields.BankCode.Value),
-		PartnerCentralID:         string(resultFields.PartnerCentralID.Value),
-		TerminalID:               resultFields.TerminalID.Value,
-		AdditionalPrivateData:    BuildResponse(string(resultFields.AdditionalPrivateData.Value)),
-		OriginalData:             BuildOriginalDataResponse(string(resultFields.OriginalData.Value)),
-		// AdditionalPrivateData2:   BuildData2Response(string(resultFields.AdditionalPrivateData2.Value)),
-		AdditionalPrivateData3: BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value)),
-	}
+	log.Println("nontaglis.IsoReversal[Decode(message string)] : start to assign iso to message")
+	msgReversal := basic.AssignISOFormatToMessage(resultFields, mti)
 
-	if mti == config.Get().Mti.Reversal.Response {
+	msgReversal.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+	msgReversal.AdditionalPrivateData = BuildResponse(string(resultFields.AdditionalPrivateData.Value))
+	msgReversal.OriginalData = basic.BuildOriginalDataResponse(string(resultFields.OriginalData.Value))
+	// AdditionalPrivateData2:   BuildData2Response(string(resultFields.AdditionalPrivateData2.Value)),
+	msgReversal.AdditionalPrivateData3 = BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value))
+
+	if mti == config.Get().Mti.Reversal.Response || mti == config.Get().Mti.Reversal.Repeat.Response {
 		msgReversal.ResponseCode = resultFields.ResponseCode.Value
 	}
 

@@ -21,11 +21,12 @@ func (manager *IsoManagerDial) Receive(result chan []byte) {
 		message := make([]byte, 4096)
 		length, err := manager.socket.Read(message)
 		if err != nil {
-			log.Println("[Receive(result chan []byte)] : the connection to dial is closed : ",
-				config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
+			log.Panic("error reading : ", err.Error())
+			// log.Println("[Receive(result chan []byte)] : the connection to dial is closed : ",
+			// 	config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 
-			log.Println("[Receive(result chan []byte)] : try to redial ")
-			manager.socket = handleDialConnection()
+			// log.Println("[Receive(result chan []byte)] : try to redial ")
+			// manager.socket = handleDialConnection()
 		}
 
 		if length > 0 {
@@ -41,8 +42,8 @@ func (manager *IsoManagerDial) Receive(result chan []byte) {
 
 func handleDialConnection() net.Conn {
 	log.Println("IsoManagerDial[handleDialConnection()] : start connection")
-	connection, err := net.Dial("tcp", fmt.Sprintf("%s:%s",
-		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port))
+	connection, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s",
+		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port), 5*time.Second)
 
 	if err != nil {
 		log.Println("IsoManagerDial[handleDialConnection()] : unable to dial to the server : ",
@@ -50,14 +51,14 @@ func handleDialConnection() net.Conn {
 		panic(err.Error())
 	}
 
-	err = connection.(*net.TCPConn).SetKeepAlive(false)
-	if err != nil {
-		log.Println("IsoManagerDial[handleDialConnection()] : unable to keep the server dial always live : ",
-			config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
-		panic(err.Error())
-	}
+	// err = connection.(*net.TCPConn).SetKeepAlive(false)
+	// if err != nil {
+	// 	log.Println("IsoManagerDial[handleDialConnection()] : unable to keep the server dial always live : ",
+	// 		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
+	// 	panic(err.Error())
+	// }
 
-	connection.SetDeadline(time.Now().Add(5 * time.Second))
+	// connection.SetDeadline(time.Now().Add(5 * time.Second))
 
 	log.Println("IsoManagerDial[handleDialConnection()] : end connection")
 
@@ -86,5 +87,5 @@ func StartDialManager(message []byte, result chan []byte) {
 
 	defer connection.Close()
 	defer manager.socket.Close()
-	log.Println("IsoManagerDial.[StartDialManager()] : start to dial manager")
+	log.Println("IsoManagerDial.[StartDialManager()] : dial manager closed")
 }

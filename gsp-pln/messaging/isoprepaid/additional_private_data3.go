@@ -31,8 +31,8 @@ func FormatData3String(data *AdditionalPrivateData3) (message string) {
 	return
 }
 
-// BuildData3Response : parse prepaid for additional private data 3 for inquiry response
-func BuildData3Response(message string) (data AdditionalPrivateData3) {
+// BuildData3 : parse prepaid for additional private data 3 for inquiry response
+func BuildData3(message string) (data AdditionalPrivateData3) {
 	data.DistributionCode = message[:2]
 	data.ServiceUnit = message[2:7]
 	data.ServiceUnitPhone = message[7:22]

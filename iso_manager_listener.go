@@ -1,16 +1,16 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
+	"strings"
 
-	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/util"
+	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/processor"
 )
 
 // IsoManagerListener : iso manager listener
@@ -59,18 +59,29 @@ func (manager *IsoManagerListener) Receive(client *Client) {
 		}
 		if length > 0 {
 			log.Println("Received call from client : " + string(message))
-			// MessageClientIn <- message
-			jsonData := map[string]string{"message": string(message)}
-			jsonValue, _ := json.Marshal(jsonData)
-			response, err := http.Post(fmt.Sprintf("http://%s:%s%s", config.Get().Iso.Messaging.IP,
-				config.Get().Iso.Messaging.Port, config.Get().Iso.Messaging.Handlers), "application/json",
-				bytes.NewBuffer(jsonValue))
+			// convert iso byte to json and process the data
+			producer := &processor.Message{}
+			producer.SetBuilder(&processor.IsoProcessor{})
+			packetIso := string(message[strings.Index(string(message), "2"):])
+			packetIsoLength := util.Bcd([]byte(fmt.Sprintf("%04x", len(packetIso)+2)))
+			encapsulatedWithLength := append(packetIsoLength, []byte(packetIso)...)
+			jsonRequest := producer.DecodeMessage(encapsulatedWithLength)
+			jsonRequest, _ = sjson.Set(string(jsonRequest), "payload", string(message))
+			jsonResult := Process([]byte(jsonRequest))
+
+			// convert the result from json to byte
+			log.Println("response after processed : ", jsonResult)
+			producer.SetBuilder(&processor.JSONProcessor{})
+			isoResult := producer.Process([]byte(jsonResult))
+
+			// client to send again the data result
+			isoMessageNoHeader := string(isoResult[2:])
+			idx0, _ := hex.DecodeString(fmt.Sprintf("%02x", len(isoMessageNoHeader)/256))
+			idx1, _ := hex.DecodeString(fmt.Sprintf("%02x", len(isoMessageNoHeader)%256))
+			n, err := client.socket.Write([]byte(strings.Join([]string{string(idx0), string(idx1), isoMessageNoHeader}, "")))
+			log.Println("success : ", n)
 			if err != nil {
-				fmt.Printf("The HTTP request failed with error %s\n", err)
-			} else {
-				data, _ := ioutil.ReadAll(response.Body)
-				byteMessage := gjson.Get(string(data), "message")
-				client.socket.Write([]byte(byteMessage.String()))
+				log.Println("error : ", err)
 			}
 		}
 	}
@@ -93,6 +104,7 @@ func (manager *IsoManagerListener) Send(client *Client) {
 // StartListenerServer : start listener server
 func StartListenerServer() {
 	log.Println("[startListenerServer()] : starting server ...")
+	// whiteList := []string{"103.226.51.70", "202.152.12.106"}
 	listener, error := net.Listen("tcp", fmt.Sprintf("%s:%s",
 		config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port))
 
@@ -114,8 +126,23 @@ func StartListenerServer() {
 			log.Println("[startListenerServer()]: unable to accept the connection for the client, error : ", error.Error())
 		}
 		client := &Client{socket: connection, data: make(chan []byte)}
+		// check := false
+		// for _, value := range whiteList {
+		// 	if value == client.socket.RemoteAddr().String() {
+		// 		check = true
+		// 		break
+		// 	}
+		// }
+
+		// if check {
+		log.Println("ip is in white list : ", client.socket.RemoteAddr())
 		manager.register <- client
 		go manager.Receive(client)
 		go manager.Send(client)
+		// } else {
+		// 	log.Println("ip is not in white list")
+		// 	client.socket.Close()
+		// }
+
 	}
 }

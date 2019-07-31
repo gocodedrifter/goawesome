@@ -20,7 +20,8 @@ package main
 
 func main() {
 
-	StartAPI()
+	go StartAPI()
+	StartListenerServer()
 	// log.Println("starting biller payment ...")
 
 	// wg.Add(3)

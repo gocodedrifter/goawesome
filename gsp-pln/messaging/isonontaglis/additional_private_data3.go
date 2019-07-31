@@ -19,7 +19,7 @@ func BuildData3Respose(message string) (addPrivateData3 AdditionalPrivateData3) 
 }
 
 // FormatData3String : format non taglis additional private data 3
-func FormatData3String(data AdditionalPrivateData3) (message string) {
+func FormatData3String(data *AdditionalPrivateData3) (message string) {
 
 	message = fmt.Sprintf("%02s%01s%017s", data.BillComponentType, data.BillComponentMinorUnit, data.BillComponentValueAmount)
 	return

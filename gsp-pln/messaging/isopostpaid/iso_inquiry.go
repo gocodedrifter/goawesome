@@ -27,10 +27,10 @@ func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 	log.Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgInquiry := basic.EncodeJSONFormatToISO(msgJSON, message)
 
-	if msgInquiry.Mti == config.Get().Mti.Inquiry.Request {
-		isoFormat.AdditionalPrivateData =
-			iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
-	} else if msgInquiry.Mti == config.Get().Mti.Inquiry.Response {
+	isoFormat.AdditionalPrivateData =
+		iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
+
+	if msgInquiry.Mti == config.Get().Mti.Inquiry.Response {
 		if len(msgInquiry.TransactionAmount.ValueAmount) > 0 {
 			isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgInquiry.TransactionAmount))
 		}

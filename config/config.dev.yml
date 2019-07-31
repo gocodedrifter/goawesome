@@ -11,15 +11,20 @@ gsp:
 iso:
     server:
         listener:
-            ip:     119.82.224.226
-            port:   8085
-            # ip:     localhost
-            # port:   8015
+            ip:     localhost
+            port:   8015
+            # ip:     119.82.224.226
+            # port:   8085
         dial:
-            ip:     119.82.224.226
-            port:   8035
+            ip:     localhost
+            port:   8075
+            # ip:     119.82.224.226
+            # port:   8035
             # ip:     103.30.85.35
             # port:   40060
+        simulator:
+            ip:     localhost
+            port:   8075
     messaging:
         ip: 127.0.0.1
         port: 8011

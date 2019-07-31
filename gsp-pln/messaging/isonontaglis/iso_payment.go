@@ -17,32 +17,29 @@ type IsoPayment struct {
 }
 
 // Encode : to encode message for nontaglis payment
-func (isoPayment *IsoPayment) Encode(message string) []byte {
+func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 
 	log.Println("nontaglis.IsoPayment[Encode(message string)] : start to encode")
-
-	msgPayment := &Message{}
-	if err := json.Unmarshal([]byte(message), msgPayment); err != nil {
-		log.Println("nontaglis.IsoPayment[Encode(message string)] : unable to marshal")
+	message := &basic.Message{
+		AdditionalPrivateData:  &AdditionalPrivateData{},
+		AdditionalPrivateData2: &AdditionalPrivateData2{},
+		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	isoFormat := &basic.Iso8583Format{
-		PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgPayment.PrimaryAccountNumber)),
-		TransactionAmount:        iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPayment.TransactionAmount)),
-		Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgPayment.Stan)),
-		DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgPayment.DateTimeLocalTransaction),
-		MerchantCategoryCode:     iso8583.NewAlphanumeric(msgPayment.MerchantCategoryCode),
-		BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgPayment.BankCode))),
-		PartnerCentralID:         iso8583.NewLlvar([]byte(msgPayment.PartnerCentralID)),
-		TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgPayment.TerminalID)),
-		AdditionalPrivateData:    iso8583.NewLllvar([]byte(FormatDataString(msgPayment.AdditionalPrivateData))),
-		AdditionalPrivateData3:   iso8583.NewLllvar([]byte(FormatData3String(msgPayment.AdditionalPrivateData3))),
-	}
+	log.Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
+	isoFormat, msgPayment := basic.EncodeJSONFormatToISO(msgJSON, message)
+
+	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPayment.TransactionAmount))
+
+	isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgPayment.AdditionalPrivateData.(*AdditionalPrivateData))))
+	isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgPayment.AdditionalPrivateData3.(*AdditionalPrivateData3))))
 
 	if msgPayment.Mti == config.Get().Mti.Payment.Response {
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgPayment.ResponseCode)
 		if msgPayment.ResponseCode == "0000" {
-			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgPayment.AdditionalPrivateData2)))
+			isoFormat.SettlementDate = iso8583.NewAlphanumeric(msgPayment.SettlementDate)
+			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgPayment.AdditionalPrivateData2.(*AdditionalPrivateData2))))
+			isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPayment.InfoText))
 		}
 	}
 
@@ -62,25 +59,19 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 	log.Println("nontaglis.IsoPayment[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	msgPayResult := &Message{
-		Mti:                      mti,
-		PrimaryAccountNumber:     string(resultFields.PrimaryAccountNumber.Value),
-		TransactionAmount:        basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value),
-		Stan:                     resultFields.Stan.Value,
-		SettlementDate:           resultFields.SettlementDate.Value,
-		DateTimeLocalTransaction: resultFields.DateTimeLocalTransaction.Value,
-		MerchantCategoryCode:     resultFields.MerchantCategoryCode.Value,
-		BankCode:                 string(resultFields.BankCode.Value),
-		PartnerCentralID:         string(resultFields.PartnerCentralID.Value),
-		TerminalID:               resultFields.TerminalID.Value,
-		AdditionalPrivateData:    BuildResponse(string(resultFields.AdditionalPrivateData.Value)),
-		AdditionalPrivateData3:   BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value)),
-	}
+	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	msgPayResult := basic.AssignISOFormatToMessage(resultFields, mti)
+
+	msgPayResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+	msgPayResult.AdditionalPrivateData = BuildResponse(string(resultFields.AdditionalPrivateData.Value))
+	msgPayResult.AdditionalPrivateData3 = BuildData3Respose(string(resultFields.AdditionalPrivateData3.Value))
 
 	if mti == config.Get().Mti.Payment.Response {
 		msgPayResult.ResponseCode = resultFields.ResponseCode.Value
 		if resultFields.ResponseCode.Value == "0000" {
+			msgPayResult.SettlementDate = resultFields.SettlementDate.Value
 			msgPayResult.AdditionalPrivateData2 = BuildData2Response(string(resultFields.AdditionalPrivateData2.Value))
+			msgPayResult.InfoText = string(resultFields.InfoText.Value)
 		}
 	}
 

@@ -32,6 +32,10 @@ type Config struct {
 				IP   string
 				Port string
 			}
+			Simulator struct {
+				IP   string
+				Port string
+			}
 		}
 		Messaging struct {
 			IP       string
@@ -85,7 +89,7 @@ var once sync.Once
 // Get : get configuration
 func Get() *Config {
 	once.Do(func() {
-		configor.Load(&configuration, "config/config.dev.yml")
+		configor.Load(&configuration, "/opt/config/config.dev.yml")
 	})
 	return configuration
 }

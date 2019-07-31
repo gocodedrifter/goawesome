@@ -27,7 +27,7 @@ type AdditionalPrivateData struct {
 }
 
 // FormatInquiryString : format inquiry for string request
-func FormatInquiryString(data AdditionalPrivateData) (message string) {
+func FormatInquiryString(data *AdditionalPrivateData) (message string) {
 	message = fmt.Sprintf("%07s%-32s%02s%03s", data.SwitcherID, data.RegistrationNumber, data.AreaCode, data.TransactionCode)
 	return
 }
@@ -68,7 +68,7 @@ func BuildResponse(message string) (data AdditionalPrivateData) {
 }
 
 // FormatDataString : format non taglis additional private data to string for payment request
-func FormatDataString(data AdditionalPrivateData) (message string) {
+func FormatDataString(data *AdditionalPrivateData) (message string) {
 
 	message = fmt.Sprintf("%07s%-32s%02s%03s%-25s%08s%08s%012s%-25s%032s%032s%05s%-35s%-15s%01s%017s%01s%017s%01s%010s",
 		data.SwitcherID, data.RegistrationNumber, data.AreaCode, data.TransactionCode, data.TransactionName,

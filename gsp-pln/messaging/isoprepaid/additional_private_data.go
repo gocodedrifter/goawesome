@@ -1,35 +1,38 @@
 package isoprepaid
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 // AdditionalPrivateData : additional private data
 type AdditionalPrivateData struct {
-	SwitcherID                             string `json:"switcherId,omitempty"`
-	MeterSerialNumber                      string `json:"meterSerialNumber,omitempty"`
-	SubscriberID                           string `json:"subscriberId,omitempty"`
-	Flag                                   string `json:"flag,omitempty"`
-	PLNReferenceNumber                     string `json:"plnReferenceNumber,omitempty"`
-	GSPReferenceNumber                     string `json:"gspReferenceNumber,omitempty"`
-	VendingReceiptNumber                   string `json:"vendingReceiptNumber,omitempty"`
-	SubscriberName                         string `json:"subscriberName,omitempty"`
-	SubscriberSegmentation                 string `json:"subscriberSegmentation,omitempty"`
-	PowerConsumingCategory                 string `json:"powerConsumingCategory,omitempty"`
-	BuyingOptions                          string `json:"buyingOptions,omitempty"`
-	MinorUnitOfAdminCharge                 string `json:"minorUnitOfAdminCharge,omitempty"`
-	AdminCharge                            string `json:"adminCharge,omitempty"`
-	MinorUnitOfStampDuty                   string `json:"minorUnitOfStampDuty,omitempty"`
-	StampDuty                              string `json:"stampDuty,omitempty"`
-	MinorUnitOfValueAddedTax               string `json:"minorUnitOfValueAddedTax,omitempty"`
-	ValueAddedTax                          string `json:"valueAddedTax,omitempty"`
-	MinorUnitOfPublicLightingTax           string `json:"minorUnitOfPublicLightingTax,omitempty"`
-	PublicLightingTax                      string `json:"publicLightingTax,omitempty"`
-	MinorUnitOfCustomerPayablesInstallment string `json:"minorUnitOfCustomerPayableInstallment,omitempty"`
-	CustomerPayablesInstallment            string `json:"customerPayableInstallment,omitempty"`
-	MinorUnitOfPowerPurchase               string `json:"minorUnitOfPowerPurchase,omitempty"`
-	PowerPurchase                          string `json:"powerPurchase,omitempty"`
-	MinorUnitOfPurchasedKwhUnit            string `json:"minorUnitOfPurchasedKwhUnit,omitempty"`
-	PurchasedKwhUnit                       string `json:"purchasedKwhUnit,omitempty"`
-	TokenNumber                            string `json:"tokenNumber,omitempty"`
+	SwitcherID                             string `bson:"switcherId" json:"switcherId,omitempty"`
+	MeterSerialNumber                      string `bson:"meterSerialNumber" json:"meterSerialNumber,omitempty"`
+	SubscriberID                           string `bson:"subscriberId" json:"subscriberId,omitempty"`
+	Flag                                   string `bson:"flag" json:"flag,omitempty"`
+	PLNReferenceNumber                     string `bson:"plnReferenceNumber" json:"plnReferenceNumber,omitempty"`
+	GSPReferenceNumber                     string `bson:"gspReferenceNumber" json:"gspReferenceNumber,omitempty"`
+	VendingReceiptNumber                   string `bson:"vendingReceiptNumber" json:"vendingReceiptNumber,omitempty"`
+	SubscriberName                         string `bson:"subscriberName" json:"subscriberName,omitempty"`
+	SubscriberSegmentation                 string `bson:"subscriberSegmentation" json:"subscriberSegmentation,omitempty"`
+	PowerConsumingCategory                 string `bson:"powerConsumingCategory" json:"powerConsumingCategory,omitempty"`
+	BuyingOptions                          string `bson:"buyingOptions" json:"buyingOptions,omitempty"`
+	MinorUnitOfAdminCharge                 string `bson:"minorUnitOfAdminCharge" json:"minorUnitOfAdminCharge,omitempty"`
+	AdminCharge                            string `bson:"adminCharge" json:"adminCharge,omitempty"`
+	MinorUnitOfStampDuty                   string `bson:"minorUnitOfStampDuty" json:"minorUnitOfStampDuty,omitempty"`
+	StampDuty                              string `bson:"stampDuty" json:"stampDuty,omitempty"`
+	MinorUnitOfValueAddedTax               string `bson:"minorUnitOfValueAddedTax" json:"minorUnitOfValueAddedTax,omitempty"`
+	ValueAddedTax                          string `bson:"valueAddedTax" json:"valueAddedTax,omitempty"`
+	MinorUnitOfPublicLightingTax           string `bson:"minorUnitOfPublicLightingTax" json:"minorUnitOfPublicLightingTax,omitempty"`
+	PublicLightingTax                      string `bson:"publicLightingTax" json:"publicLightingTax,omitempty"`
+	MinorUnitOfCustomerPayablesInstallment string `bson:"minorUnitOfCustomerPayableInstallment" json:"minorUnitOfCustomerPayableInstallment,omitempty"`
+	CustomerPayablesInstallment            string `bson:"customerPayableInstallment" json:"customerPayableInstallment,omitempty"`
+	MinorUnitOfPowerPurchase               string `bson:"minorUnitOfPowerPurchase" json:"minorUnitOfPowerPurchase,omitempty"`
+	PowerPurchase                          string `bson:"powerPurchase" json:"powerPurchase,omitempty"`
+	MinorUnitOfPurchasedKwhUnit            string `bson:"minorUnitOfPurchasedKwhUnit" json:"minorUnitOfPurchasedKwhUnit,omitempty"`
+	PurchasedKwhUnit                       string `bson:"purchasedKwhUnit" json:"purchasedKwhUnit,omitempty"`
+	TokenNumber                            string `bson:"tokenNumber" json:"tokenNumber,omitempty"`
 }
 
 // FormatInqReq : build postpaid additional private data for inquiry request
@@ -104,7 +107,7 @@ func BuildInquiryResponse(message string) (data AdditionalPrivateData) {
 
 // BuildPurchaseResponse : parse prepaid for additional private data for purchase response
 func BuildPurchaseResponse(message string) (data AdditionalPrivateData) {
-
+	log.Println("data : ", message)
 	data.SwitcherID = message[:7]
 	data.MeterSerialNumber = message[7:18]
 	data.SubscriberID = message[18:30]
@@ -131,6 +134,25 @@ func BuildPurchaseResponse(message string) (data AdditionalPrivateData) {
 	data.MinorUnitOfPurchasedKwhUnit = message[210:211]
 	data.PurchasedKwhUnit = message[211:221]
 	data.TokenNumber = message[221:]
+
+	return
+}
+
+// BuildPurchaseRequest : parse prepaid for additional private data for purchase response
+func BuildPurchaseRequest(message string) (data AdditionalPrivateData) {
+
+	data.SwitcherID = message[:7]
+	data.MeterSerialNumber = message[7:18]
+	data.SubscriberID = message[18:30]
+	data.Flag = message[30:31]
+	data.PLNReferenceNumber = message[31:63]
+	data.GSPReferenceNumber = message[63:95]
+	data.SubscriberName = message[95:120]
+	data.SubscriberSegmentation = message[120:124]
+	data.PowerConsumingCategory = message[124:133]
+	data.MinorUnitOfAdminCharge = message[133:134]
+	data.AdminCharge = message[134:144]
+	data.BuyingOptions = message[144:]
 
 	return
 }

@@ -36,6 +36,7 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 			isoFormat.SettlementDate = iso8583.NewAlphanumeric(msgPayment.SettlementDate)
 			isoFormat.AdditionalPrivateData2 =
 				iso8583.NewLllvar([]byte(FormatData2String(msgPayment.AdditionalPrivateData2.(*AdditionalPrivateData2))))
+			isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPayment.InfoText))
 		}
 	}
 
@@ -60,6 +61,7 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 	log.Println("postpaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
 	msgPayResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
+	msgPayResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
 	msgPayResult.AdditionalPrivateData = BuildDataResponse(string(resultFields.AdditionalPrivateData.Value))
 
 	if mti == config.Get().Mti.Payment.Response {
@@ -67,6 +69,7 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 		if resultFields.ResponseCode.Value == "0000" {
 			msgPayResult.SettlementDate = resultFields.SettlementDate.Value
 			msgPayResult.AdditionalPrivateData2 = BuildData2Response(string(resultFields.AdditionalPrivateData2.Value))
+			msgPayResult.InfoText = string(resultFields.InfoText.Value)
 		}
 	}
 

@@ -21,7 +21,7 @@ func BuildData2Response(message string) (addPrivateData2 AdditionalPrivateData2)
 }
 
 // FormatData2String : format string for additional private data 2
-func FormatData2String(data AdditionalPrivateData2) (message string) {
-	message = fmt.Sprintf("%s%s%s", data.MutationNumber, data.SubscriberSegmentation, data.PowerConsumingCategory)
+func FormatData2String(data *AdditionalPrivateData2) (message string) {
+	message = fmt.Sprintf("%s%s%s%s", data.MutationNumber, data.SubscriberSegmentation, data.PowerConsumingCategory, data.GSPReferenceNumber)
 	return
 }

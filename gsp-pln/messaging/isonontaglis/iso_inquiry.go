@@ -16,40 +16,31 @@ type IsoInquiry struct {
 }
 
 // Encode : to encode message for nontaglis inquiry
-func (isoInquiry *IsoInquiry) Encode(message string) []byte {
+func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 
 	log.Println("nontaglis.IsoInquiry[Encode(message string)] : start to encode ")
 
-	msgInquiry := &Message{}
-	if err := json.Unmarshal([]byte(message), msgInquiry); err != nil {
-		log.Println("nontaglis.IsoInquiry[Encode(message string)] : unable to marshal")
+	log.Println("nontaglis.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
+	message := &basic.Message{
+		AdditionalPrivateData:  &AdditionalPrivateData{},
+		AdditionalPrivateData2: &AdditionalPrivateData2{},
+		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : mti to encode ", msgInquiry.Mti)
-	isoFormat := &basic.Iso8583Format{
-		PrimaryAccountNumber:     iso8583.NewLlvar([]byte(msgInquiry.PrimaryAccountNumber)),
-		Stan:                     iso8583.NewAlphanumeric(util.GetIsoStanFormat(msgInquiry.Stan)),
-		DateTimeLocalTransaction: iso8583.NewAlphanumeric(msgInquiry.DateTimeLocalTransaction),
-		MerchantCategoryCode:     iso8583.NewAlphanumeric(msgInquiry.MerchantCategoryCode),
-		BankCode:                 iso8583.NewLlvar([]byte(util.GetIsoBankCodeFormat(msgInquiry.BankCode))),
-		PartnerCentralID:         iso8583.NewLlvar([]byte(msgInquiry.PartnerCentralID)),
-		TerminalID:               iso8583.NewAlphanumeric(util.GetIsoTerminalIDFormat(msgInquiry.TerminalID)),
-	}
+	log.Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
+	isoFormat, msgInquiry := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	if msgInquiry.Mti == config.Get().Mti.Inquiry.Request {
-		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData)))
+		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatInquiryString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
 	} else if msgInquiry.Mti == config.Get().Mti.Inquiry.Response {
 		if len(msgInquiry.TransactionAmount.ValueAmount) > 0 {
 			isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgInquiry.TransactionAmount))
 		}
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgInquiry.ResponseCode)
-		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgInquiry.AdditionalPrivateData)))
-		log.Println("response add priv data : ", FormatDataString(msgInquiry.AdditionalPrivateData))
+		isoFormat.AdditionalPrivateData = iso8583.NewLllvar([]byte(FormatDataString(msgInquiry.AdditionalPrivateData.(*AdditionalPrivateData))))
 		if msgInquiry.ResponseCode == "0000" {
-			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgInquiry.AdditionalPrivateData2)))
-			log.Println("response add priv data 2 : ", FormatData2String(msgInquiry.AdditionalPrivateData2))
-			isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3)))
-			log.Println("response add priv data 3 : ", FormatData3String(msgInquiry.AdditionalPrivateData3))
+			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgInquiry.AdditionalPrivateData2.(*AdditionalPrivateData2))))
+			isoFormat.AdditionalPrivateData3 = iso8583.NewLllvar([]byte(FormatData3String(msgInquiry.AdditionalPrivateData3.(*AdditionalPrivateData3))))
 		}
 	}
 
@@ -69,16 +60,8 @@ func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
 	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	msgInqResult := &Message{
-		Mti:                      mti,
-		PrimaryAccountNumber:     string(resultFields.PrimaryAccountNumber.Value),
-		Stan:                     resultFields.Stan.Value,
-		DateTimeLocalTransaction: resultFields.DateTimeLocalTransaction.Value,
-		MerchantCategoryCode:     resultFields.MerchantCategoryCode.Value,
-		BankCode:                 string(resultFields.BankCode.Value),
-		PartnerCentralID:         string(resultFields.PartnerCentralID.Value),
-		TerminalID:               resultFields.TerminalID.Value,
-	}
+	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	msgInqResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
 	if mti == config.Get().Mti.Inquiry.Request {
 		msgInqResult.AdditionalPrivateData = BuildInquiry(string(resultFields.AdditionalPrivateData.Value))

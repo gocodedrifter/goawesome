@@ -30,8 +30,8 @@ func (isoReversal *IsoReversal) Encode(msgJSON string) []byte {
 	isoFormat.AdditionalPrivateData =
 		iso8583.NewLllvar([]byte(FormatDataString(msgReversal.AdditionalPrivateData.(*AdditionalPrivateData))))
 	isoFormat.OriginalData = iso8583.NewLlvar([]byte(basic.FormatReversalString(msgReversal.OriginalData)))
-
-	if msgReversal.Mti == config.Get().Mti.Reversal.Response {
+	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgReversal.TransactionAmount))
+	if msgReversal.Mti == config.Get().Mti.Reversal.Response || msgReversal.Mti == config.Get().Mti.Reversal.Repeat.Response {
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgReversal.ResponseCode)
 	}
 
@@ -48,7 +48,7 @@ func (isoReversal *IsoReversal) Encode(msgJSON string) []byte {
 // Decode : decode from byte iso8583 to postpaid reversal
 func (isoReversal *IsoReversal) Decode(message []byte) (string, error) {
 
-	log.Println("nontaglis.IsoReversal[Decode(message string)] : start to decode")
+	log.Println("postpaid.IsoReversal[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
 	log.Println("postpaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
@@ -56,6 +56,7 @@ func (isoReversal *IsoReversal) Decode(message []byte) (string, error) {
 
 	msgReversal.AdditionalPrivateData = BuildDataResponse(string(resultFields.AdditionalPrivateData.Value))
 	msgReversal.OriginalData = basic.BuildOriginalDataResponse(string(resultFields.OriginalData.Value))
+	msgReversal.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
 
 	if len(resultFields.ResponseCode.Value) > 0 {
 		msgReversal.ResponseCode = resultFields.ResponseCode.Value

@@ -32,7 +32,8 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 
 	isoFormat.AdditionalPrivateData3 =
 		iso8583.NewLllvar([]byte(FormatData3String(msgPurchase.AdditionalPrivateData3.(*AdditionalPrivateData3))))
-	if msgPurchase.Mti == config.Get().Mti.Payment.Response {
+	if msgPurchase.Mti == config.Get().Mti.Payment.Response || msgPurchase.Mti == config.Get().Mti.Advice.Response ||
+		msgPurchase.Mti == config.Get().Mti.Advice.Repeat.Response {
 		isoFormat.ResponseCode = iso8583.NewAlphanumeric(msgPurchase.ResponseCode)
 		if msgPurchase.ResponseCode == "0000" {
 			isoFormat.SettlementDate = iso8583.NewAlphanumeric(msgPurchase.SettlementDate)
@@ -40,6 +41,12 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 				iso8583.NewLllvar([]byte(FormatPurchaseRes(msgPurchase.AdditionalPrivateData.(*AdditionalPrivateData))))
 			isoFormat.AdditionalPrivateData2 =
 				iso8583.NewLllvar([]byte(msgPurchase.AdditionalPrivateData2.(string)))
+
+			if info := msgPurchase.InfoText; len(info) > 0 {
+				isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPurchase.InfoText))
+			} else {
+				isoFormat.InfoText = iso8583.NewLllvar([]byte(" "))
+			}
 
 		}
 	}
@@ -65,18 +72,32 @@ func (isoPurchase *IsoPurchase) Decode(message []byte) (string, error) {
 	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to assign iso to message")
 	msgPurResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
-	if mti == config.Get().Mti.Payment.Response || mti == config.Get().Mti.Advice.Response || mti == config.Get().Mti.Advice.Repeat.Response {
-		msgPurResult.ResponseCode = resultFields.ResponseCode.Value
-		msgPurResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to parse value from request to json")
+	msgPurResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
+	msgPurResult.AdditionalPrivateData3 = BuildData3(string(resultFields.AdditionalPrivateData3.Value))
 
-		if resultFields.ResponseCode.Value == "0000" {
-			msgPurResult.SettlementDate = resultFields.SettlementDate.Value
-			msgPurResult.AdditionalPrivateData = BuildPurchaseResponse(string(resultFields.AdditionalPrivateData.Value))
-			msgPurResult.AdditionalPrivateData2 = string(resultFields.AdditionalPrivateData2.Value)
-			msgPurResult.AdditionalPrivateData3 = BuildData3Response(string(resultFields.AdditionalPrivateData3.Value))
-		} else {
-			msgPurResult.AdditionalPrivateData = BuildInquiryResponse(string(resultFields.AdditionalPrivateData.Value))
+	if mti == config.Get().Mti.Payment.Request || resultFields.ResponseCode.Value != "0000" {
+		msgPurResult.AdditionalPrivateData = BuildPurchaseRequest(string(resultFields.AdditionalPrivateData.Value))
+		if lngth := len(resultFields.ResponseCode.Value); lngth > 0 {
+			msgPurResult.ResponseCode = resultFields.ResponseCode.Value
 		}
+
+	} else {
+
+		if mti == config.Get().Mti.Payment.Response || mti == config.Get().Mti.Advice.Response || mti == config.Get().Mti.Advice.Repeat.Response {
+
+			msgPurResult.ResponseCode = resultFields.ResponseCode.Value
+			msgPurResult.SettlementDate = resultFields.SettlementDate.Value
+			if infoText := string(resultFields.InfoText.Value); len(infoText) > 0 {
+				msgPurResult.InfoText = string(resultFields.InfoText.Value)
+			} else {
+				msgPurResult.InfoText = " "
+			}
+
+		}
+
+		msgPurResult.AdditionalPrivateData = BuildPurchaseResponse(string(resultFields.AdditionalPrivateData.Value))
+		msgPurResult.AdditionalPrivateData2 = string(resultFields.AdditionalPrivateData2.Value)
 	}
 
 	log.Println("prepaid.IsoPurchase[Decode(message string)] json decode : ", &msgPurResult)
