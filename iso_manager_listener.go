@@ -33,16 +33,6 @@ func (manager *IsoManagerListener) Start() {
 				delete(manager.clients, connection)
 				log.Println("A Connection has terminated!")
 			}
-			// case message := <-MessageClientOut:
-			// 	log.Println("send back to client : ", string(message))
-			// 	for connection := range manager.clients {
-			// 		select {
-			// 		case connection.data <- message:
-			// 		default:
-			// 			close(connection.data)
-			// 			delete(manager.clients, connection)
-			// 		}
-			// 	}
 		}
 	}
 }
@@ -104,7 +94,6 @@ func (manager *IsoManagerListener) Send(client *Client) {
 // StartListenerServer : start listener server
 func StartListenerServer() {
 	log.Println("[startListenerServer()] : starting server ...")
-	// whiteList := []string{"103.226.51.70", "202.152.12.106"}
 	listener, error := net.Listen("tcp", fmt.Sprintf("%s:%s",
 		config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port))
 
@@ -126,23 +115,10 @@ func StartListenerServer() {
 			log.Println("[startListenerServer()]: unable to accept the connection for the client, error : ", error.Error())
 		}
 		client := &Client{socket: connection, data: make(chan []byte)}
-		// check := false
-		// for _, value := range whiteList {
-		// 	if value == client.socket.RemoteAddr().String() {
-		// 		check = true
-		// 		break
-		// 	}
-		// }
 
-		// if check {
-		log.Println("ip is in white list : ", client.socket.RemoteAddr())
 		manager.register <- client
 		go manager.Receive(client)
 		go manager.Send(client)
-		// } else {
-		// 	log.Println("ip is not in white list")
-		// 	client.socket.Close()
-		// }
 
 	}
 }

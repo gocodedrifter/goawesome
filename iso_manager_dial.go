@@ -22,11 +22,6 @@ func (manager *IsoManagerDial) Receive(result chan []byte) {
 		length, err := manager.socket.Read(message)
 		if err != nil {
 			log.Panic("error reading : ", err.Error())
-			// log.Println("[Receive(result chan []byte)] : the connection to dial is closed : ",
-			// 	config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
-
-			// log.Println("[Receive(result chan []byte)] : try to redial ")
-			// manager.socket = handleDialConnection()
 		}
 
 		if length > 0 {
@@ -50,15 +45,6 @@ func handleDialConnection() net.Conn {
 			config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
 		panic(err.Error())
 	}
-
-	// err = connection.(*net.TCPConn).SetKeepAlive(false)
-	// if err != nil {
-	// 	log.Println("IsoManagerDial[handleDialConnection()] : unable to keep the server dial always live : ",
-	// 		config.Get().Iso.Server.Dial.IP, config.Get().Iso.Server.Dial.Port)
-	// 	panic(err.Error())
-	// }
-
-	// connection.SetDeadline(time.Now().Add(5 * time.Second))
 
 	log.Println("IsoManagerDial[handleDialConnection()] : end connection")
 
