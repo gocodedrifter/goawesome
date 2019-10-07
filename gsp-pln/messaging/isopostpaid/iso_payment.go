@@ -2,7 +2,8 @@ package isopostpaid
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"github.com/Ayvan/iso8583"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
@@ -17,13 +18,13 @@ type IsoPayment struct {
 // Encode : to encode message for postpaid payment iso8583 format
 func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 
-	log.Println("postpaid.IsoPayment[Encode(message string)] : start to encode")
+	log.Get().Println("postpaid.IsoPayment[Encode(message string)] : start to encode")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData2: &AdditionalPrivateData2{},
 	}
 
-	log.Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
+	log.Get().Println("postpaid.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgPayment := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPayment.TransactionAmount))
@@ -47,7 +48,7 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 		panic(err.Error())
 	}
 
-	log.Println("postpaid.IsoPayment[Encode(message string)] : end to encode")
+	log.Get().Println("postpaid.IsoPayment[Encode(message string)] : end to encode")
 	return util.EncapsulateBytes(packetIso)
 
 }
@@ -55,10 +56,10 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 // Decode : decode from byte iso8583 to postpaid payment
 func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 
-	log.Println("postpaid.IsoPayment[Decode(message string)] : start to decode")
+	log.Get().Println("postpaid.IsoPayment[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	log.Println("postpaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	log.Get().Println("postpaid.IsoInquiry[Decode(message string)] : start to assign iso to message")
 	msgPayResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
 	msgPayResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
@@ -73,7 +74,7 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 		}
 	}
 
-	log.Println("postpaid.IsoPayment[Decode(message string)] json decode : ", &msgPayResult)
+	log.Get().Println("postpaid.IsoPayment[Decode(message string)] json decode : ", &msgPayResult)
 
 	json, _ := json.Marshal(msgPayResult)
 

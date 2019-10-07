@@ -1,5 +1,7 @@
 package main
 
+import "flag"
+
 // var wg = sync.WaitGroup{}
 
 // GetMessageISO : get message iso
@@ -17,10 +19,15 @@ package main
 // 	fmt.Println(producer.DecodeMessage(message))
 // 	json.NewEncoder(w).Encode(producer.DecodeMessage(message))
 // }
+var port, dest *string
 
 func main() {
 
-	go StartAPI()
+	port, dest = flag.String("src", "0", "a string"), flag.String("dest", "0", "a string")
+
+	flag.Parse()
+
+	// go StartAPI()
 	StartListenerServer()
 	// log.Println("starting biller payment ...")
 

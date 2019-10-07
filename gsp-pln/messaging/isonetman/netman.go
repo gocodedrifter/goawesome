@@ -2,7 +2,8 @@ package isonetman
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 
@@ -26,10 +27,10 @@ type Netman struct {
 // Encode : encode from network management to iso8583
 func (netman *Netman) Encode(message string) []byte {
 
-	log.Println("netman[Encode(message string)] : start to encode")
+	log.Get().Println("netman[Encode(message string)] : start to encode")
 	netmanMsg := Netman{}
 	if err := json.Unmarshal([]byte(message), &netmanMsg); err != nil {
-		log.Println("netman[Encode(message string)] : unable to marshal")
+		log.Get().Println("netman[Encode(message string)] : unable to marshal")
 	}
 
 	isoFormat := &basic.Iso8583Format{
@@ -51,7 +52,7 @@ func (netman *Netman) Encode(message string) []byte {
 		panic(err.Error())
 	}
 
-	log.Println("netman[Encode(message string)] : end to encode")
+	log.Get().Println("netman[Encode(message string)] : end to encode")
 	return util.EncapsulateBytes(packetIso)
 
 }
@@ -59,7 +60,7 @@ func (netman *Netman) Encode(message string) []byte {
 // Decode : decode from byte iso8583 to networkmanagement
 func (netman *Netman) Decode(message []byte) (string, error) {
 
-	log.Println("netman[Decode(message string)] : start to decode")
+	log.Get().Println("netman[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
 	netmanResult := &Netman{
@@ -74,6 +75,6 @@ func (netman *Netman) Decode(message []byte) (string, error) {
 
 	result, _ := json.Marshal(netmanResult)
 
-	log.Println("netman[Decode(message string)] : end to decode")
+	log.Get().Println("netman[Decode(message string)] : end to decode")
 	return string(result), nil
 }

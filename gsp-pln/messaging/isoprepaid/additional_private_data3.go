@@ -3,8 +3,9 @@ package isoprepaid
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strconv"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 )
 
 // AdditionalPrivateData3 : additional private data 3
@@ -39,11 +40,11 @@ func BuildData3(message string) (data AdditionalPrivateData3) {
 	data.MaxKwhLimit = message[22:27]
 	data.TotalRepeat = message[27:28]
 
-	log.Println("testing : ", data.TotalRepeat)
-	log.Println("rest value : ", message[28:])
+	log.Get().Println("testing : ", data.TotalRepeat)
+	log.Get().Println("rest value : ", message[28:])
 	repeat, _ := strconv.Atoi(data.TotalRepeat)
 	for powerLength := 0; powerLength < repeat; powerLength++ {
-		log.Println("power length : ", powerLength)
+		log.Get().Println("power length : ", powerLength)
 		data.PowerPurchaseUnsold = append(data.PowerPurchaseUnsold,
 			BuildPower(message[(28+(powerLength*11)):(28+((powerLength+1)*11))]))
 	}

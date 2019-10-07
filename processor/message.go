@@ -1,6 +1,6 @@
 package processor
 
-import "log"
+import log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 // Message : message
 type Message struct {
@@ -9,7 +9,7 @@ type Message struct {
 
 // SetBuilder : set type builder
 func (message *Message) SetBuilder(buildProcess BuildProcess) {
-	log.Println("message[SetBuilder] : ", buildProcess)
+	log.Get().Println("message[SetBuilder] : ", buildProcess)
 	message.buildProcess = buildProcess
 }
 

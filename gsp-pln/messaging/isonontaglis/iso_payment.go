@@ -2,7 +2,8 @@ package isonontaglis
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 
@@ -19,14 +20,14 @@ type IsoPayment struct {
 // Encode : to encode message for nontaglis payment
 func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 
-	log.Println("nontaglis.IsoPayment[Encode(message string)] : start to encode")
+	log.Get().Println("nontaglis.IsoPayment[Encode(message string)] : start to encode")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData2: &AdditionalPrivateData2{},
 		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
+	log.Get().Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgPayment := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPayment.TransactionAmount))
@@ -56,10 +57,10 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 // Decode : decode from byte iso8583 to nontaglis payment
 func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 
-	log.Println("nontaglis.IsoPayment[Decode(message string)] : start to decode")
+	log.Get().Println("nontaglis.IsoPayment[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	log.Get().Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
 	msgPayResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
 	msgPayResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
@@ -75,7 +76,7 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 		}
 	}
 
-	log.Println("nontaglis.IsoPayment[Decode(message string)] json decode : ", &msgPayResult)
+	log.Get().Println("nontaglis.IsoPayment[Decode(message string)] json decode : ", &msgPayResult)
 
 	json, _ := json.Marshal(msgPayResult)
 

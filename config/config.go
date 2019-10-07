@@ -20,6 +20,7 @@ type Config struct {
 		Postpaid struct {
 			Pan string
 		}
+		Bankcode string
 	}
 
 	Iso struct {
@@ -89,7 +90,7 @@ var once sync.Once
 // Get : get configuration
 func Get() *Config {
 	once.Do(func() {
-		configor.Load(&configuration, "/opt/config/config.dev.yml")
+		configor.Load(&configuration, "/apps/2pay/billerpayment-service/config/config.prod.yml")
 	})
 	return configuration
 }

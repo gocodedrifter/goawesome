@@ -2,7 +2,8 @@ package isoprepaid
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"github.com/Ayvan/iso8583"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
@@ -17,13 +18,14 @@ type IsoPurchase struct {
 // Encode : to encode message for prepaid purchase iso8583 format
 func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 
-	log.Println("prepaid.IsoPurchase[Encode(message string)] : start to encode")
+	log.Get().Println("prepaid.IsoPurchase[Encode(message string)] : start to encode")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
+		AdditionalPrivateData2: &AdditionalPrivateData2{},
 		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("prepaid.IsoPurchase[Encode(message string)] : encode json format to iso")
+	log.Get().Println("prepaid.IsoPurchase[Encode(message string)] : encode json format to iso")
 	isoFormat, msgPurchase := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	isoFormat.TransactionAmount = iso8583.NewAlphanumeric(basic.FormatTrxAmountString(msgPurchase.TransactionAmount))
@@ -40,7 +42,7 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 			isoFormat.AdditionalPrivateData =
 				iso8583.NewLllvar([]byte(FormatPurchaseRes(msgPurchase.AdditionalPrivateData.(*AdditionalPrivateData))))
 			isoFormat.AdditionalPrivateData2 =
-				iso8583.NewLllvar([]byte(msgPurchase.AdditionalPrivateData2.(string)))
+				iso8583.NewLllvar([]byte(FormatData2String(msgPurchase.AdditionalPrivateData2.(*AdditionalPrivateData2))))
 
 			if info := msgPurchase.InfoText; len(info) > 0 {
 				isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPurchase.InfoText))
@@ -58,7 +60,7 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 		panic(err.Error())
 	}
 
-	log.Println("prepaid.IsoPurchase[Encode(message string)] : end to encode")
+	log.Get().Println("prepaid.IsoPurchase[Encode(message string)] : end to encode")
 	return util.EncapsulateBytes(packetIso)
 
 }
@@ -66,13 +68,13 @@ func (isoPurchase *IsoPurchase) Encode(msgJSON string) []byte {
 // Decode : decode from byte iso8583 to prepaid purchase
 func (isoPurchase *IsoPurchase) Decode(message []byte) (string, error) {
 
-	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to decode")
+	log.Get().Println("prepaid.IsoPurchase[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to assign iso to message")
+	log.Get().Println("prepaid.IsoPurchase[Decode(message string)] : start to assign iso to message")
 	msgPurResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
-	log.Println("prepaid.IsoPurchase[Decode(message string)] : start to parse value from request to json")
+	log.Get().Println("prepaid.IsoPurchase[Decode(message string)] : start to parse value from request to json")
 	msgPurResult.TransactionAmount = basic.ParseMessageToTrxAmt(resultFields.TransactionAmount.Value)
 	msgPurResult.AdditionalPrivateData3 = BuildData3(string(resultFields.AdditionalPrivateData3.Value))
 
@@ -97,10 +99,10 @@ func (isoPurchase *IsoPurchase) Decode(message []byte) (string, error) {
 		}
 
 		msgPurResult.AdditionalPrivateData = BuildPurchaseResponse(string(resultFields.AdditionalPrivateData.Value))
-		msgPurResult.AdditionalPrivateData2 = string(resultFields.AdditionalPrivateData2.Value)
+		msgPurResult.AdditionalPrivateData2 = BuildData2Response(string(resultFields.AdditionalPrivateData2.Value))
 	}
 
-	log.Println("prepaid.IsoPurchase[Decode(message string)] json decode : ", &msgPurResult)
+	log.Get().Println("prepaid.IsoPurchase[Decode(message string)] json decode : ", &msgPurResult)
 
 	json, _ := json.Marshal(msgPurResult)
 

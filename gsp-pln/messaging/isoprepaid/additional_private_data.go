@@ -2,7 +2,8 @@ package isoprepaid
 
 import (
 	"fmt"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 )
 
 // AdditionalPrivateData : additional private data
@@ -54,6 +55,7 @@ func FormatPurchaseReq(data *AdditionalPrivateData) (message string) {
 // FormatPurchaseRes : format purchase response for prepaid
 func FormatPurchaseRes(data *AdditionalPrivateData) (message string) {
 
+	log.Get().Println("data masuk : ", data.StampDuty)
 	message = fmt.Sprintf("%07s%011s%012s%01s%-32s%-32s%08s%-25s%-4s%09s%01s%01s%010s%01s%010s%01s%010s%01s%010s%01s%010s%01s%012s%01s%010s%020s",
 		data.SwitcherID, data.MeterSerialNumber, data.SubscriberID, data.Flag, data.PLNReferenceNumber,
 		data.GSPReferenceNumber, data.VendingReceiptNumber, data.SubscriberName, data.SubscriberSegmentation,
@@ -62,6 +64,7 @@ func FormatPurchaseRes(data *AdditionalPrivateData) (message string) {
 		data.MinorUnitOfCustomerPayablesInstallment, data.CustomerPayablesInstallment, data.MinorUnitOfPowerPurchase, data.PowerPurchase,
 		data.MinorUnitOfPurchasedKwhUnit, data.PurchasedKwhUnit, data.TokenNumber)
 
+	log.Get().Println("response : ", message)
 	return
 }
 
@@ -107,7 +110,7 @@ func BuildInquiryResponse(message string) (data AdditionalPrivateData) {
 
 // BuildPurchaseResponse : parse prepaid for additional private data for purchase response
 func BuildPurchaseResponse(message string) (data AdditionalPrivateData) {
-	log.Println("data : ", message)
+	log.Get().Println("data : ", message)
 	data.SwitcherID = message[:7]
 	data.MeterSerialNumber = message[7:18]
 	data.SubscriberID = message[18:30]

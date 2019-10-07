@@ -2,7 +2,8 @@ package isonontaglis
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"github.com/Ayvan/iso8583"
 
@@ -18,16 +19,16 @@ type IsoInquiry struct {
 // Encode : to encode message for nontaglis inquiry
 func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : start to encode ")
+	log.Get().Println("nontaglis.IsoInquiry[Encode(message string)] : start to encode ")
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
+	log.Get().Println("nontaglis.IsoInquiry[Encode(message string)] : initialize message to assign interface with isopostpaid message")
 	message := &basic.Message{
 		AdditionalPrivateData:  &AdditionalPrivateData{},
 		AdditionalPrivateData2: &AdditionalPrivateData2{},
 		AdditionalPrivateData3: &AdditionalPrivateData3{},
 	}
 
-	log.Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
+	log.Get().Println("nontaglis.IsoInquiry[Encode(message string)] : encode json format to iso")
 	isoFormat, msgInquiry := basic.EncodeJSONFormatToISO(msgJSON, message)
 
 	if msgInquiry.Mti == config.Get().Mti.Inquiry.Request {
@@ -57,10 +58,10 @@ func (isoInquiry *IsoInquiry) Encode(msgJSON string) []byte {
 // Decode : decode from byte iso8583 to nontaglis inquiry
 func (isoInquiry *IsoInquiry) Decode(message []byte) (string, error) {
 
-	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to decode")
+	log.Get().Println("nontaglis.IsoInquiry[Decode(message string)] : start to decode")
 	resultFields, mti := basic.DecodeIsoMessage(message)
 
-	log.Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
+	log.Get().Println("nontaglis.IsoInquiry[Decode(message string)] : start to assign iso to message")
 	msgInqResult := basic.AssignISOFormatToMessage(resultFields, mti)
 
 	if mti == config.Get().Mti.Inquiry.Request {

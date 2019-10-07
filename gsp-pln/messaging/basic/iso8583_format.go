@@ -2,7 +2,8 @@ package basic
 
 import (
 	"encoding/json"
-	"log"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"github.com/Ayvan/iso8583"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/util"
@@ -63,7 +64,7 @@ func DecodeIsoMessage(message []byte) (*Iso8583Format, string) {
 func EncodeJSONFormatToISO(msgJSON string, message *Message) (*Iso8583Format, *Message) {
 
 	if err := json.Unmarshal([]byte(msgJSON), message); err != nil {
-		log.Println("postpaid.IsoInquiry[Encode(message string)] : unable to marshal")
+		log.Get().Println("postpaid.IsoInquiry[Encode(message string)] : unable to marshal")
 	}
 
 	isoFormat := &Iso8583Format{

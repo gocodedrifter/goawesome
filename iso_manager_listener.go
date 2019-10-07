@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 	"net"
 	"strings"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"github.com/tidwall/sjson"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
@@ -26,12 +27,12 @@ func (manager *IsoManagerListener) Start() {
 		select {
 		case connection := <-manager.register:
 			manager.clients[connection] = ""
-			log.Println("Added new connection!")
+			log.Get().Println("Added new connection!")
 		case connection := <-manager.unregister:
 			if _, ok := manager.clients[connection]; ok {
 				close(connection.data)
 				delete(manager.clients, connection)
-				log.Println("A Connection has terminated!")
+				log.Get().Println("A Connection has terminated!")
 			}
 		}
 	}
@@ -48,7 +49,7 @@ func (manager *IsoManagerListener) Receive(client *Client) {
 			break
 		}
 		if length > 0 {
-			log.Println("Received call from client : " + string(message))
+			log.Get().Println("Received call from client : " + string(message))
 			// convert iso byte to json and process the data
 			producer := &processor.Message{}
 			producer.SetBuilder(&processor.IsoProcessor{})
@@ -60,7 +61,7 @@ func (manager *IsoManagerListener) Receive(client *Client) {
 			jsonResult := Process([]byte(jsonRequest))
 
 			// convert the result from json to byte
-			log.Println("response after processed : ", jsonResult)
+			log.Get().Println("response after processed : ", jsonResult)
 			producer.SetBuilder(&processor.JSONProcessor{})
 			isoResult := producer.Process([]byte(jsonResult))
 
@@ -69,9 +70,9 @@ func (manager *IsoManagerListener) Receive(client *Client) {
 			idx0, _ := hex.DecodeString(fmt.Sprintf("%02x", len(isoMessageNoHeader)/256))
 			idx1, _ := hex.DecodeString(fmt.Sprintf("%02x", len(isoMessageNoHeader)%256))
 			n, err := client.socket.Write([]byte(strings.Join([]string{string(idx0), string(idx1), isoMessageNoHeader}, "")))
-			log.Println("success : ", n)
+			log.Get().Println("success : ", n)
 			if err != nil {
-				log.Println("error : ", err)
+				log.Get().Println("error : ", err)
 			}
 		}
 	}
@@ -93,13 +94,13 @@ func (manager *IsoManagerListener) Send(client *Client) {
 
 // StartListenerServer : start listener server
 func StartListenerServer() {
-	log.Println("[startListenerServer()] : starting server ...")
-	listener, error := net.Listen("tcp", fmt.Sprintf("%s:%s",
-		config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port))
+	log.Get().Println("[startListenerServer()] : starting server ...")
+	listener, error := net.Listen("tcp4", fmt.Sprintf("%s:%s",
+		config.Get().Iso.Server.Listener.IP, *port))
 
 	if error != nil {
-		log.Printf("[startListenerServer()]: unable to listen for the ip and port : %s:%s, error : %s",
-			config.Get().Iso.Server.Listener.IP, config.Get().Iso.Server.Listener.Port, error.Error())
+		log.Get().Printf("[startListenerServer()]: unable to listen for the ip and port : %s:%s, error : %s",
+			config.Get().Iso.Server.Listener.IP, *port, error.Error())
 	}
 	manager := IsoManagerListener{
 		clients:    make(map[*Client]string),
@@ -111,8 +112,10 @@ func StartListenerServer() {
 
 	for {
 		connection, _ := listener.Accept()
+		log.Get().Println("remote : ", connection.RemoteAddr())
+		log.Get().Println("local : ", connection.LocalAddr())
 		if error != nil {
-			log.Println("[startListenerServer()]: unable to accept the connection for the client, error : ", error.Error())
+			log.Get().Println("[startListenerServer()]: unable to accept the connection for the client, error : ", error.Error())
 		}
 		client := &Client{socket: connection, data: make(chan []byte)}
 

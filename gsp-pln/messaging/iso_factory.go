@@ -1,8 +1,9 @@
 package messaging
 
 import (
-	"log"
 	"strings"
+
+	log "gitlab.com/kasku/kasku-2pay/2pay-billerpayment/log"
 
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/config"
 	"gitlab.com/kasku/kasku-2pay/2pay-billerpayment/gsp-pln/messaging/isonetman"
@@ -15,7 +16,7 @@ import (
 func GetTypeMessage(messageType string) BuildIso {
 	switch messageType {
 	case config.Get().Mti.Netman.Request, config.Get().Mti.Netman.Response:
-		log.Println("IsoFactory[GetTypeMessage] netman : ", messageType)
+		log.Get().Println("IsoFactory[GetTypeMessage] netman : ", messageType)
 		return &isonetman.Netman{}
 	case strings.Join([]string{config.Get().Mti.Inquiry.Request, config.Get().Gsp.Nontaglis.Pan}, ""),
 		strings.Join([]string{config.Get().Mti.Inquiry.Response, config.Get().Gsp.Nontaglis.Pan}, ""):
