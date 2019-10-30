@@ -33,9 +33,9 @@ func Process(message []byte) (response string) {
 	clientPartner, clientTerminal, bankcode := gjson.Get(string(message), "partnerCentralId"), gjson.Get(string(message), "terminalId"), gjson.Get(string(message), "bankCode")
 	var unique bytes.Buffer
 	unique.WriteString(clientPartner.String())
-	unique.WriteString(bankcode.String())
+	// unique.WriteString(bankcode.String())
 	log.Get().Println("unique value : ", unique.String())
-	if unique.String() != "09000010850001" {
+	if unique.String() != "0900001" {
 		log.Get().Println("return because partner central id and bank code is not same")
 		return
 	}
