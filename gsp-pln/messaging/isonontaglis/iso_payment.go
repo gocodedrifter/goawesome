@@ -40,7 +40,12 @@ func (isoPayment *IsoPayment) Encode(msgJSON string) []byte {
 		if msgPayment.ResponseCode == "0000" {
 			isoFormat.SettlementDate = iso8583.NewAlphanumeric(msgPayment.SettlementDate)
 			isoFormat.AdditionalPrivateData2 = iso8583.NewLllvar([]byte(FormatData2String(msgPayment.AdditionalPrivateData2.(*AdditionalPrivateData2))))
-			isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPayment.InfoText))
+
+			if info := msgPayment.InfoText; len(info) > 0 {
+				isoFormat.InfoText = iso8583.NewLllvar([]byte(msgPayment.InfoText))
+			} else {
+				isoFormat.InfoText = iso8583.NewLllvar([]byte(" "))
+			}
 		}
 	}
 
@@ -72,7 +77,11 @@ func (isoPayment *IsoPayment) Decode(message []byte) (string, error) {
 		if resultFields.ResponseCode.Value == "0000" {
 			msgPayResult.SettlementDate = resultFields.SettlementDate.Value
 			msgPayResult.AdditionalPrivateData2 = BuildData2Response(string(resultFields.AdditionalPrivateData2.Value))
-			msgPayResult.InfoText = string(resultFields.InfoText.Value)
+			if infoText := string(resultFields.InfoText.Value); len(infoText) > 0 {
+				msgPayResult.InfoText = string(resultFields.InfoText.Value)
+			} else {
+				msgPayResult.InfoText = " "
+			}
 		}
 	}
 

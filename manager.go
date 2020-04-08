@@ -30,7 +30,7 @@ func Process(message []byte) (response string) {
 
 	// Change the original partner id and terminal id and save before send to GSP
 	log.Get().Println("Manager[Process(message []byte)] : Change the original partner id and terminal id and save before send to GSP")
-	clientPartner, clientTerminal, bankcode := gjson.Get(string(message), "partnerCentralId"), gjson.Get(string(message), "terminalId"), gjson.Get(string(message), "bankCode")
+	clientPartner, clientTerminal, bankcode, merchantCode := gjson.Get(string(message), "partnerCentralId"), gjson.Get(string(message), "terminalId"), gjson.Get(string(message), "bankCode"), gjson.Get(string(message), "merchantCategoryCode")
 	var unique bytes.Buffer
 	unique.WriteString(clientPartner.String())
 	// unique.WriteString(bankcode.String())
@@ -43,6 +43,7 @@ func Process(message []byte) (response string) {
 	json2PayOut, _ := sjson.Set(string(message), "partnerCentralId", config.Get().Gsp.Partner)
 	json2PayOut, _ = sjson.Set(string(json2PayOut), "terminalId", config.Get().Gsp.Terminal)
 	json2PayOut, _ = sjson.Set(string(json2PayOut), "bankCode", config.Get().Gsp.Bankcode)
+	json2PayOut, _ = sjson.Set(string(json2PayOut), "merchantCategoryCode", config.Get().Gsp.Merchantcode)
 	json2PayOut, _ = sjson.Set(string(json2PayOut), "createdDate", time.Now())
 
 	producer.SetBuilder(&processor.JSONProcessor{})
@@ -69,6 +70,7 @@ func Process(message []byte) (response string) {
 	response, _ = sjson.Set(jsonGsp, "partnerCentralId", clientPartner.String())
 	response, _ = sjson.Set(response, "terminalId", clientTerminal.String())
 	response, _ = sjson.Set(response, "bankCode", bankcode.String())
+	response, _ = sjson.Set(response, "merchantCategoryCode", merchantCode.String())
 	jsonClientOut, _ := sjson.Set(string(response), "createdDate", time.Now())
 	producer.SetBuilder(&processor.JSONProcessor{})
 	iso2PayToClient := producer.Process([]byte(jsonClientOut))

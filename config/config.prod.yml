@@ -8,6 +8,7 @@ gsp:
     postpaid:
         pan:    99501
     bankcode:   0090010
+    merchantcode: 6021
 
 iso:
     server:

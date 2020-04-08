@@ -20,7 +20,8 @@ type Config struct {
 		Postpaid struct {
 			Pan string
 		}
-		Bankcode string
+		Bankcode     string
+		Merchantcode string
 	}
 
 	Iso struct {
