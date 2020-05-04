@@ -27,7 +27,7 @@ func ParseMessageToTrxAmt(message string) (transactionAmount TransactionAmount) 
 }
 
 // FormatTrxAmountString : format transaction amount
-func FormatTrxAmountString(trx TransactionAmount) (message string) {
+func FormatTrxAmountString(trx *TransactionAmount) (message string) {
 	message = fmt.Sprintf("%03s%01s%012s", trx.IsoCurrencyCode, trx.CurrencyMinorUnit, trx.ValueAmount)
 	return
 }
